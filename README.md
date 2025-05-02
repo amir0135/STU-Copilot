@@ -1,0 +1,2 @@
+# stu-copilot
+STU Copilot
