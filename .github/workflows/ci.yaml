@@ -1,0 +1,89 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_NOLOGO: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for git-based versioning
+
+      - name: Cache .NET packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore src/STU.Copilot.sln
+
+      - name: Build solution
+        run: dotnet build src/STU.Copilot.sln --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test src/STU.Copilot.sln --configuration Release --no-build --no-restore --logger trx
+
+      - name: Publish test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: '**/TestResults/*.trx'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Cache pip
+        if: ${{ hashFiles('src/STU.Copilot.UI/requirements.txt') != '' }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('src/STU.Copilot.UI/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install Python dependencies
+        if: ${{ hashFiles('src/STU.Copilot.UI/requirements.txt') != '' }}
+        run: pip install -r src/STU.Copilot.UI/requirements.txt
+
+      - name: Install pytest
+        if: ${{ hashFiles('src/STU.Copilot.UI/**/*.py') != '' }}
+        run: pip install pytest pytest-cov
+
+      - name: Run Python tests
+        if: ${{ hashFiles('src/STU.Copilot.UI/**/*.py') != '' }}
+        run: pytest src/STU.Copilot.UI --cov=src/STU.Copilot.UI --cov-report=xml
+
+      - name: Upload Python coverage report
+        if: ${{ hashFiles('src/STU.Copilot.UI/**/*.py') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-coverage
+          path: coverage.xml
