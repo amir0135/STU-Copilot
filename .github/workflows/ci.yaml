@@ -78,15 +78,15 @@ jobs:
         run: pip install -r src/STU.Copilot.UI/requirements.txt
 
       - name: Install pytest
-        if: ${{ hashFiles('src/STU.Copilot.UI/**/*.py') != '' }}
+        if: ${{ hashFiles('src/STU.Copilot.UI/test_*.py') != '' || hashFiles('src/STU.Copilot.UI/**/*_test.py') != '' }}
         run: pip install pytest pytest-cov
 
       - name: Run Python tests
-        if: ${{ hashFiles('src/STU.Copilot.UI/**/*.py') != '' }}
+        if: ${{ hashFiles('src/STU.Copilot.UI/test_*.py') != '' || hashFiles('src/STU.Copilot.UI/**/*_test.py') != '' }}
         run: pytest src/STU.Copilot.UI --cov=src/STU.Copilot.UI --cov-report=xml
 
       - name: Upload Python coverage report
-        if: ${{ hashFiles('src/STU.Copilot.UI/**/*.py') != '' }}
+        if: ${{ hashFiles('src/STU.Copilot.UI/test_*.py') != '' || hashFiles('src/STU.Copilot.UI/**/*_test.py') != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: python-coverage
