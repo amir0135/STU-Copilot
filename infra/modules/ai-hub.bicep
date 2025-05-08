@@ -27,24 +27,24 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview'
     containerRegistry: containerRegistryId
   }
 
-  // resource aiServicesConnection 'connections@2025-01-01-preview' = {
-  //   name: '${name}-connection-AzureOpenAI'
-  //   properties: {
-  //     category: 'AzureOpenAI'
-  //     target: aiServicesTarget
-  //     authType: 'ApiKey'
-  //     isSharedToAll: true
-  //     credentials: {
-  //       key: '${listKeys(aiServicesId, '2025-01-01-preview').key1}'
-  //     }
-  //     metadata: {
-  //       ApiType: 'Azure'
-  //       ResourceId: aiServicesId
-  //     }
-  //   }
-  // }
+  resource aiServicesConnection 'connections@2024-10-01' = {
+    name: '${name}-connection-AzureOpenAI'
+    properties: {
+      category: 'AzureOpenAI'
+      target: aiServicesTarget
+      authType: 'ApiKey'
+      isSharedToAll: true
+      credentials: {
+        key: '${listKeys(aiServicesId, '2024-10-01').key1}'
+      }
+      metadata: {
+        ApiType: 'Azure'
+        ResourceId: aiServicesId
+      }
+    }
+  }
 
-  // resource aiSearchConnection 'connections@2025-01-01-preview' = {
+  // resource aiSearchConnection 'connections@2024-10-01' = {
   //   name: '${name}-connection-AzureSearch'
   //   properties: {
   //     category: 'CognitiveSearch'
@@ -52,7 +52,7 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview'
   //     authType: 'ApiKey'
   //     isSharedToAll: true
   //     credentials: {
-  //       key: '${listKeys(aiSearchId, '2025-01-01-preview').key1}'
+  //       key: '${listKeys(aiSearchId, '2024-10-01').key1}'
   //     }
   //     metadata: {
   //       ApiType: 'Azure'
