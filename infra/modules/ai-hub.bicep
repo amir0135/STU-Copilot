@@ -6,9 +6,8 @@ param keyVaultId string
 param applicationInsightsId string
 param containerRegistryId string
 param aiServicesId string
+param aiServicesName string
 param aiServicesTarget string
-param aiSearchId string
-param aiSearchTarget string
 
 resource aiHub 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview' = {
   name: name
@@ -27,45 +26,20 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview'
     containerRegistry: containerRegistryId
   }
 
-  resource aiServicesConnection 'connections@2024-10-01' = {
-    name: '${name}-connection-AzureOpenAI'
+  resource aiServicesConnection 'connections@2025-01-01-preview' = {
+    name: aiServicesName
     properties: {
       category: 'AzureOpenAI'
       target: aiServicesTarget
       authType: 'ApiKey'
       isSharedToAll: true
       credentials: {
-        key: '${listKeys(aiServicesId, '2024-10-01').key1}'
+        key: '${listKeys(aiServicesId, '2025-04-01-preview').key1}'
       }
       metadata: {
         ApiType: 'Azure'
         ResourceId: aiServicesId
       }
-    }
-  }  
-}
-
-resource aiSearchConnection 'Microsoft.MachineLearningServices/workspaces/connections@2025-01-01-preview' = {
-  parent: aiHub
-  name: '${name}-connection-AISearch'
-  properties: {
-    authType: 'ApiKey'
-    category: 'CognitiveSearch'
-    target: aiSearchTarget
-    useWorkspaceManagedIdentity: false
-    credentials: {
-      key: '${listKeys(aiServicesId, '2024-10-01').key1}'
-    }
-    isSharedToAll: true
-    sharedUserList: []
-    peRequirement: 'NotRequired'
-    peStatus: 'NotApplicable'
-    metadata: {
-      type: 'azure_ai_search'
-      ApiType: 'Azure'
-      ResourceId: aiSearchId
-      ApiVersion: '2024-05-01-preview'
-      DeploymentApiVersion: '2023-11-01'
     }
   }
 }

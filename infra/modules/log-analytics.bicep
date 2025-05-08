@@ -3,10 +3,10 @@ param name string
 param tags object
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
-  name: name 
+  name: name
   location: location
   tags: tags
-  properties:{
+  properties: {
     retentionInDays: 30
     sku: {
       name: 'PerGB2018'

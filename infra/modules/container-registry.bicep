@@ -44,15 +44,5 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2025-04-01' =
   }
 }
 
-// resource diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-//   name: 'diagnosticSettings'
-//   scope: containerRegistry
-//   properties: {
-//     workspaceId: workspaceId
-//     logs: logs
-//     metrics: metrics
-//   }
-// }
-
 output containerRegistryId string = containerRegistry.id
 output containerRegistryName string = containerRegistry.name

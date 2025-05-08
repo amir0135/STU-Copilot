@@ -21,7 +21,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2024-12-01-preview' = {
     sku: {
       family: 'A'
       name: 'standard'
-    }    
+    }
     softDeleteRetentionInDays: 7
     tenantId: subscription().tenantId
   }

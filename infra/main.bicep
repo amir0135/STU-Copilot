@@ -98,8 +98,27 @@ module aiHub 'modules/ai-hub.bicep' = {
     applicationInsightsId: applicationInsights.outputs.applicationInsightsId
     containerRegistryId: containerRegistry.outputs.containerRegistryId
     aiServicesId: aiServices.outputs.aiServicesId
+    aiServicesName: aiServices.outputs.aiServicesName
     aiServicesTarget: aiServices.outputs.aiServicesTarget
-    aiSearchId: aiSearch.outputs.aiSearchId
-    aiSearchTarget: aiSearch.outputs.aiSearchTarget
   }
 }
+
+output resourceGroupId string = resourceGroup.id
+output resourceGroupName string = resourceGroup.name
+output logAnalyticsId string = logAnalytics.outputs.logAnalyticsId
+output logAnalyticsName string = logAnalytics.outputs.logAnalyticsName
+output applicationInsightsId string = applicationInsights.outputs.applicationInsightsId
+output applicationInsightsName string = applicationInsights.outputs.applicationInsightsName
+output storageAccountId string = storageAccount.outputs.storageAccountId
+output storageAccountName string = storageAccount.outputs.storageAccountName
+output keyVaultId string = keyVault.outputs.keyVaultId
+output keyVaultName string = keyVault.outputs.keyVaultName
+output containerRegistryId string = containerRegistry.outputs.containerRegistryId
+output containerRegistryName string = containerRegistry.outputs.containerRegistryName
+output aiServicesId string = aiServices.outputs.aiServicesId
+output aiServicesName string = aiServices.outputs.aiServicesName
+output aiServicesTarget string = aiServices.outputs.aiServicesTarget
+output aiSearchId string = aiSearch.outputs.aiSearchId
+output aiSearchName string = aiSearch.outputs.aiSearchName
+output aiHubId string = aiHub.outputs.aiHubId
+output aiHubName string = aiHub.outputs.aiHubName

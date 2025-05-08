@@ -9,19 +9,18 @@ resource aiSearch 'Microsoft.Search/searchServices@2025-02-01-preview' = {
   sku: {
     name: 'basic'
   }
-  properties:{
-    semanticSearch: 'free'    
+  properties: {
+    semanticSearch: 'free'
     disableLocalAuth: false
     encryptionWithCmk: {
       enforcement: 'Unspecified'
     }
-    endpoint: 'https://${name}.search.windows.net'
     networkRuleSet: {
       bypass: 'None'
     }
     replicaCount: 1
     partitionCount: 1
-  }  
+  }
 }
 
 output aiSearchId string = aiSearch.id
