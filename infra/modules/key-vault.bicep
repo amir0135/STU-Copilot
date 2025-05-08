@@ -22,9 +22,26 @@ resource keyVault 'Microsoft.KeyVault/vaults@2024-12-01-preview' = {
       family: 'A'
       name: 'standard'
     }
+    // accessPolicies: [
+    //   {
+    //     tenantId: subscription().tenantId
+    //     objectId: ''
+    //     permissions: {
+    //       keys: [
+    //         'all'
+    //       ]
+    //       secrets: [
+    //         'all'
+    //       ]
+    //       certificates: [
+    //         'all'
+    //       ]
+    //     }
+    //   }
+    // ]     
     softDeleteRetentionInDays: 7
     tenantId: subscription().tenantId
   }
 }
 
-output keyvaultId string = keyVault.id
+output keyVaultId string = keyVault.id

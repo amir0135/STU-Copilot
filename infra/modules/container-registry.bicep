@@ -38,6 +38,9 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2025-04-01' =
     }
     publicNetworkAccess: 'Disabled'
     zoneRedundancy: 'Disabled'
+    encryption: {
+      status: 'disabled'
+    }
   }
 }
 

@@ -86,3 +86,20 @@ module aiSearch 'modules/ai-search.bicep' = {
     tags: tags
   }
 }
+
+module aiHub 'modules/ai-hub.bicep' = {
+  name: 'aiHub'
+  scope: resourceGroup
+  params: {
+    name: 'hub-${environmentName}-${prefix}'    
+    tags: tags
+    storageAccountId: storageAccount.outputs.storageAccountId
+    keyVaultId: keyVault.outputs.keyVaultId
+    applicationInsightsId: applicationInsights.outputs.applicationInsightsId
+    containerRegistryId: containerRegistry.outputs.containerRegistryId
+    aiServicesId: aiServices.outputs.aiServicesId
+    aiServicesTarget: aiServices.outputs.aiServicesTarget
+    aiSearchId: aiSearch.outputs.aiSearchId
+    aiSearchTarget: aiSearch.outputs.aiSearchTarget
+  }
+}

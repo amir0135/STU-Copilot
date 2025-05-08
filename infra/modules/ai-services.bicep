@@ -12,7 +12,9 @@ resource aiServices 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = 
   kind: 'AIServices' // or 'OpenAI'
   properties: {
     publicNetworkAccess: 'Enabled'
+    allowProjectManagement: false        
   }
+  
 }
 
 output aiServicesId string = aiServices.id

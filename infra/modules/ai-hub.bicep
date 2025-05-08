@@ -7,7 +7,8 @@ param applicationInsightsId string
 param containerRegistryId string
 param aiServicesId string
 param aiServicesTarget string
-//param logAnalyticsId string
+param aiSearchId string
+param aiSearchTarget string
 
 resource aiHub 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview' = {
   name: name
@@ -24,23 +25,41 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview'
     keyVault: keyVaultId
     applicationInsights: applicationInsightsId
     containerRegistry: containerRegistryId
-    //workspaceId: logAnalyticsId
   }
 
-  resource aiServicesConnection 'connections@2024-01-01-preview' = {
-    name: '${name}-connection-AzureOpenAI'
-    properties: {
-      category: 'AzureOpenAI'
-      target: aiServicesTarget
-      authType: 'ApiKey'
-      isSharedToAll: true
-      credentials: {
-        key: '${listKeys(aiServicesId, '2021-10-01').key1}'
-      }
-      metadata: {
-        ApiType: 'Azure'
-        ResourceId: aiServicesId
-      }
-    }
-  }
+  // resource aiServicesConnection 'connections@2025-01-01-preview' = {
+  //   name: '${name}-connection-AzureOpenAI'
+  //   properties: {
+  //     category: 'AzureOpenAI'
+  //     target: aiServicesTarget
+  //     authType: 'ApiKey'
+  //     isSharedToAll: true
+  //     credentials: {
+  //       key: '${listKeys(aiServicesId, '2025-01-01-preview').key1}'
+  //     }
+  //     metadata: {
+  //       ApiType: 'Azure'
+  //       ResourceId: aiServicesId
+  //     }
+  //   }
+  // }
+
+  // resource aiSearchConnection 'connections@2025-01-01-preview' = {
+  //   name: '${name}-connection-AzureSearch'
+  //   properties: {
+  //     category: 'CognitiveSearch'
+  //     target: aiSearchTarget
+  //     authType: 'ApiKey'
+  //     isSharedToAll: true
+  //     credentials: {
+  //       key: '${listKeys(aiSearchId, '2025-01-01-preview').key1}'
+  //     }
+  //     metadata: {
+  //       ApiType: 'Azure'
+  //       ResourceId: aiSearchId
+  //     }
+  //   }
+  // }
 }
+
+output aiHubId string = aiHub.id
