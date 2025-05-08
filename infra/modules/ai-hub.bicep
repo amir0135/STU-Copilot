@@ -42,24 +42,32 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview'
         ResourceId: aiServicesId
       }
     }
-  }
+  }  
+}
 
-  // resource aiSearchConnection 'connections@2024-10-01' = {
-  //   name: '${name}-connection-AzureSearch'
-  //   properties: {
-  //     category: 'CognitiveSearch'
-  //     target: aiSearchTarget
-  //     authType: 'ApiKey'
-  //     isSharedToAll: true
-  //     credentials: {
-  //       key: '${listKeys(aiSearchId, '2024-10-01').key1}'
-  //     }
-  //     metadata: {
-  //       ApiType: 'Azure'
-  //       ResourceId: aiSearchId
-  //     }
-  //   }
-  // }
+resource aiSearchConnection 'Microsoft.MachineLearningServices/workspaces/connections@2025-01-01-preview' = {
+  parent: aiHub
+  name: '${name}-connection-AISearch'
+  properties: {
+    authType: 'ApiKey'
+    category: 'CognitiveSearch'
+    target: aiSearchTarget
+    useWorkspaceManagedIdentity: false
+    credentials: {
+      key: '${listKeys(aiServicesId, '2024-10-01').key1}'
+    }
+    isSharedToAll: true
+    sharedUserList: []
+    peRequirement: 'NotRequired'
+    peStatus: 'NotApplicable'
+    metadata: {
+      type: 'azure_ai_search'
+      ApiType: 'Azure'
+      ResourceId: aiSearchId
+      ApiVersion: '2024-05-01-preview'
+      DeploymentApiVersion: '2023-11-01'
+    }
+  }
 }
 
 output aiHubId string = aiHub.id
