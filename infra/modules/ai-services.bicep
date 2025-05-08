@@ -18,4 +18,5 @@ resource aiServices 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = 
 }
 
 output aiServicesId string = aiServices.id
+output aiServicesName string = aiServices.name
 output aiServicesTarget string = aiServices.properties.endpoint

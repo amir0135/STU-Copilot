@@ -25,4 +25,5 @@ resource aiSearch 'Microsoft.Search/searchServices@2025-02-01-preview' = {
 }
 
 output aiSearchId string = aiSearch.id
+output aiSearchName string = aiSearch.name
 output aiSearchTarget string = aiSearch.properties.endpoint

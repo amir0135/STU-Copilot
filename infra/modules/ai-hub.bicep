@@ -71,3 +71,4 @@ resource aiSearchConnection 'Microsoft.MachineLearningServices/workspaces/connec
 }
 
 output aiHubId string = aiHub.id
+output aiHubName string = aiHub.name

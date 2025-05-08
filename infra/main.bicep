@@ -91,7 +91,7 @@ module aiHub 'modules/ai-hub.bicep' = {
   name: 'aiHub'
   scope: resourceGroup
   params: {
-    name: 'hub-${environmentName}-${prefix}'    
+    name: 'hub-${environmentName}-${prefix}'
     tags: tags
     storageAccountId: storageAccount.outputs.storageAccountId
     keyVaultId: keyVault.outputs.keyVaultId

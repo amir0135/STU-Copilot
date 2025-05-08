@@ -55,3 +55,4 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2025-04-01' =
 // }
 
 output containerRegistryId string = containerRegistry.id
+output containerRegistryName string = containerRegistry.name
