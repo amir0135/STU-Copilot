@@ -17,6 +17,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
+env:  
+  AZURE_LOCATION: swedencentral
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -40,14 +43,14 @@ jobs:
         run: |
           az bicep build --file infra/main.bicep
           az deployment sub validate \
-            --location swedencentral \
+            --location ${{ env.AZURE_LOCATION }} \
             --template-file infra/main.bicep \
             --parameters @infra/parameters_dev.json
 
       - name: What-If Deployment
         run: |
           az deployment sub what-if \
-            --location swedencentral \
+            --location ${{ env.AZURE_LOCATION }} \
             --template-file infra/main.bicep \
             --parameters @infra/parameters_dev.json \
             --output json > deployment_output_dev.json
@@ -85,7 +88,7 @@ jobs:
         id: deploy
         run: |
           az deployment sub create \
-            --location swedencentral \
+            --location ${{ env.AZURE_LOCATION }} \
             --template-file infra/main.bicep \
             --parameters @infra/parameters_dev.json \
             --output json > deployment_output_dev.json
