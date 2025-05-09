@@ -39,13 +39,15 @@ jobs:
       - name: Validate Bicep file
         run: |
           az bicep build --file infra/main.bicep
-          az deployment sub validate \            
+          az deployment sub validate \
+            --location swedencentral \
             --template-file infra/main.bicep \
             --parameters @infra/parameters_dev.json
 
       - name: What-If Deployment
         run: |
           az deployment sub what-if \
+            --location swedencentral \
             --template-file infra/main.bicep \
             --parameters @infra/parameters_dev.json \
             --output json > deployment_output_dev.json
@@ -83,6 +85,7 @@ jobs:
         id: deploy
         run: |
           az deployment sub create \
+            --location swedencentral \
             --template-file infra/main.bicep \
             --parameters @infra/parameters_dev.json \
             --output json > deployment_output_dev.json
