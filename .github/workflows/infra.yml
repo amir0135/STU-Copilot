@@ -6,9 +6,19 @@ on:
       - main
     paths:
       - "infra/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "infra/**"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -37,7 +47,32 @@ jobs:
         run: |
           az deployment sub what-if \
             --template-file infra/main.bicep \
-            --parameters @infra/parameters_dev.json
+            --parameters @infra/parameters_dev.json \
+            --output json > deployment_output_dev.json
+
+      - name: Print deployment outputs
+        run: |
+          cat deployment_output_dev.json
+  deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    # Only run the deployment job when merging to main branch (not on PRs)
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: |
+            {
+              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
+              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
+              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
+              "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
+            }
+          enable-AzPSSession: false
 
       - name: Wait for approval
         uses: peter-evans/repository-dispatch@v2

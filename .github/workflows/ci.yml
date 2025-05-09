@@ -21,7 +21,35 @@ env:
   DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER: 0
 
 jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      src-changed: ${{ steps.filter.outputs.src }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for git-based versioning
+          
+      - name: Check for changes in src folder
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            src:
+              - 'src/**'
+              
+  success:
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.src-changed != 'true' && github.event_name != 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: No changes in src directory
+        run: echo "No changes detected in src directory. Workflow completed successfully."
+
   build-and-test:
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.src-changed == 'true' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
 
     steps:
