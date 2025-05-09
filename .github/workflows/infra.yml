@@ -80,8 +80,9 @@ jobs:
           enable-AzPSSession: false
 
       - name: Wait for approval
-        uses: peter-evans/repository-dispatch@v2
+        uses: peter-evans/repository-dispatch@v3
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           event-type: manual-approval-required
 
       - name: Deploy Bicep file
