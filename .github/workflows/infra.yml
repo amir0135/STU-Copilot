@@ -17,7 +17,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
-env:  
+env:
   AZURE_LOCATION: swedencentral
 
 jobs:
@@ -78,12 +78,6 @@ jobs:
               "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
             }
           enable-AzPSSession: false
-
-      - name: Wait for approval
-        uses: peter-evans/repository-dispatch@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: manual-approval-required
 
       - name: Deploy Bicep file
         id: deploy
