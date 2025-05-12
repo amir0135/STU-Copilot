@@ -1,6 +1,6 @@
 from typing import List
 import chainlit as cl
-import sk_service as sks
+import semantic_kernel_service as sks
 from semantic_kernel.contents import ChatHistory
 
 
