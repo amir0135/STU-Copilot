@@ -2,3 +2,4 @@ dotenv
 chainlit
 semantic-kernel
 azure-cosmos
+azure-storage-blob
