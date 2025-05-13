@@ -3,6 +3,8 @@ param name string
 param tags object
 param databaseName string = 'stu-copilot-db'
 param chatsContainerName string = 'chats'
+param chatsContainerThroughput int = 50
+
 
 resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' = {
   name: name
@@ -49,7 +51,7 @@ resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' = {
           }
         }
         options: {
-          throughput: 50
+          throughput: chatsContainerThroughput
         }
       }
     }
