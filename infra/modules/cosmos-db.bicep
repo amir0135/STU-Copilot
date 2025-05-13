@@ -24,11 +24,7 @@ resource cosmosDB 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' = {
         failoverPriority: 0
       }
     ]
-    capabilities: [
-      {
-        name: 'EnableServerless'
-      }
-    ]
+    capacityMode: 'Serverless'    
   }
 
   resource sqlDatabase 'sqlDatabases@2024-12-01-preview' = {
