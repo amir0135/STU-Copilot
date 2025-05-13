@@ -1,6 +1,7 @@
 import os
 from azure.cosmos import CosmosClient, PartitionKey, exceptions
 
+
 class CosmosDBService:
     def __init__(self):
         endpoint = os.environ.get('COSMOS_ENDPOINT')

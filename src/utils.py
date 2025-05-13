@@ -2,7 +2,7 @@ import os
 PROMPT_DIR = os.path.join(os.path.dirname(__file__), 'prompts')
 
 
-def load_prompt(agent_name):
+def load_prompt(agent_name):    
     """Loads the prompt for a given agent from a file."""
     file_path = os.path.join(PROMPT_DIR, f"{agent_name}.prompty")
     print(f"Loading prompt for {agent_name} from {file_path}")
