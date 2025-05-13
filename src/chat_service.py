@@ -13,11 +13,11 @@ def get_communicator_agent() -> ChatCompletionAgent:
 
     communicator_agent = create_agent(
         agent_name=AgentType.communicator_agent,
-        model_name="gpt-4o-mini"
+        model_name="gpt-4.1-mini"
     )
 
-    communicator_agent.kernel.add_plugin(
-        QuestionerPlugin(),
-        plugin_name=AgentType.questioner_agent)
+    # communicator_agent.kernel.add_plugin(
+    #     QuestionerPlugin(),
+    #     plugin_name=AgentType.questioner_agent)
 
     return communicator_agent
