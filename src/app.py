@@ -1,44 +1,37 @@
 from typing import List
 import chainlit as cl
-import semantic_kernel_service as sks
+from chat_service import get_communicator_agent
 from semantic_kernel.contents import ChatHistory
+from semantic_kernel.agents import ChatCompletionAgent, ChatHistoryAgentThread
 
 
 @cl.on_chat_start
-async def on_chat_start():
-    kernel = sks.create_kernel()
-    ai_service = kernel.get_service("gpt-4o-mini")
-
-    # Initialize the kernel with the AI service
-    cl.user_session.set("kernel", kernel)
-    cl.user_session.set("ai_service", ai_service)
+async def on_chat_start():    
+    agent = get_communicator_agent()   
+    cl.user_session.set("agent", agent)
+    cl.user_session.set("thread", None)
     cl.user_session.set("chat_history", ChatHistory())
 
 
 @cl.on_message
-async def main(message: cl.Message):
-    kernel = cl.user_session.get("kernel")  # type: sk.Kernel
-    ai_service = cl.user_session.get("ai_service")  # type: AzureChatCompletion
-    chat_history = cl.user_session.get("chat_history")  # type: ChatHistory
-
-    # Add user message to history
+async def on_message(message: cl.Message):
+    agent: ChatCompletionAgent = cl.user_session.get("agent")
+    chat_history: ChatHistory = cl.user_session.get("chat_history")
+    thread: ChatHistoryAgentThread = cl.user_session.get("thread")
+    
     chat_history.add_user_message(message.content)
-
-    # Create a Chainlit message for the response stream
     answer = cl.Message(content="")
 
-    async for msg in ai_service.get_streaming_chat_message_content(
-        chat_history=chat_history,
-        user_input=message.content,
-        settings=sks.request_settings(),
-        kernel=kernel,
+    # Stream the agent's response token by token
+    async for token in agent.invoke_stream(
+            messages=chat_history,
+            thread=thread
     ):
-        if msg.content:
-            await answer.stream_token(msg.content)
-
-    # Add the full assistant response to history
-    chat_history.add_assistant_message(answer.content)
-
+        if token.content:
+            await answer.stream_token(token.content.content)       
+    thread = token.thread
+    chat_history.add_assistant_message(answer.content)    
+    
     # Send the final message
     await answer.send()
 
@@ -55,7 +48,7 @@ async def set_starts() -> List[cl.Starter]:
             message="Create a bot to analyze and visualize data trends.",
         ),
         cl.Starter(
-            label="Customer Support Agent",
-            message="Develop an AI agent to handle customer support queries.",
+            label="Weather Bot",
+            message="How is the weather today?",
         ),
     ]
