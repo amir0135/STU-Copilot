@@ -24,8 +24,9 @@ async def on_message(message: cl.Message):
 
     # Stream the agent's response token by token
     async for token in agent.invoke_stream(
-            messages="what's the weather like today?",
-            thread=thread):
+            messages=chat_history,
+            thread=thread
+    ):
         if token.content:
             await answer.stream_token(token.content.content)       
     thread = token.thread
@@ -47,7 +48,7 @@ async def set_starts() -> List[cl.Starter]:
             message="Create a bot to analyze and visualize data trends.",
         ),
         cl.Starter(
-            label="Customer Support Agent",
-            message="Develop an AI agent to handle customer support queries.",
+            label="Weather Bot",
+            message="How is the weather today?",
         ),
     ]

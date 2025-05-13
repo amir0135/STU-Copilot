@@ -3,6 +3,9 @@ from semantic_kernel.agents import ChatCompletionAgent
 from plugin_factory import QuestionerPlugin
 
 
+
+
+
 def get_communicator_agent() -> ChatCompletionAgent:
     """
     Create a communicator agent for the kernel.
@@ -16,8 +19,8 @@ def get_communicator_agent() -> ChatCompletionAgent:
         model_name="gpt-4.1-mini"
     )
 
-    # communicator_agent.kernel.add_plugin(
-    #     QuestionerPlugin(),
-    #     plugin_name=AgentType.questioner_agent)
+    communicator_agent.kernel.add_plugin(
+        QuestionerPlugin(),
+        plugin_name=AgentType.questioner_agent)
 
     return communicator_agent
