@@ -103,6 +103,15 @@ module aiHub 'modules/ai-hub.bicep' = {
   }
 }
 
+module cosmosDB 'modules/cosmos-db.bicep' = {
+  name: 'cosmosDB'
+  scope: resourceGroup
+  params: {
+    name: 'cosmos-${environmentName}-${prefix}'
+    tags: tags
+  }
+}
+
 output resourceGroupId string = resourceGroup.id
 output resourceGroupName string = resourceGroup.name
 output logAnalyticsId string = logAnalytics.outputs.logAnalyticsId
@@ -122,3 +131,6 @@ output aiSearchId string = aiSearch.outputs.aiSearchId
 output aiSearchName string = aiSearch.outputs.aiSearchName
 output aiHubId string = aiHub.outputs.aiHubId
 output aiHubName string = aiHub.outputs.aiHubName
+output cosmosDBId string = cosmosDB.outputs.cosmosDBId
+output cosmosDBName string = cosmosDB.outputs.cosmosDBName
+output cosmosDBDocumentEndpoint string = cosmosDB.outputs.cosmosDBDocumentEndpoint
