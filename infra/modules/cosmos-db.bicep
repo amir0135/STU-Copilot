@@ -6,7 +6,7 @@ param chatsContainerName string = 'chats'
 param chatsContainerThroughput int = 50
 
 
-resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' = {
+resource cosmosDB 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' = {
   name: name
   location: location
   tags: tags
@@ -57,3 +57,7 @@ resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' = {
     }
   }
 }
+
+output cosmosDBId string = cosmosDB.id
+output cosmosDBName string = cosmosDB.name
+output cosmosDBDocumentEndpoint string = cosmosDB.properties.documentEndpoint
