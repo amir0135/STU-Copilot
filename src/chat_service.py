@@ -9,6 +9,7 @@ class ChatService:
     """Service for managing chat agents and plugins."""
 
     def __init__(self):
+        self.cosmos_db_service = CosmosDBService()
         self.agent_factory = AgentFactory()
         self.plugin_factory = PluginFactory(self.agent_factory)
 
@@ -26,8 +27,8 @@ class ChatService:
 
         return communicator_agent
     
-    def persist_message(chat_message: cl.Message, user_id: str):
+    def persist_message(self, chat_message: cl.Message, user_id: str):
         """Persist the chat message to the database."""
-        db_service: CosmosDBService = cl.user_session.get("db_service")
+        
         message = ChatMessage(message=chat_message, user_id=user_id)    
-        db_service.create_item(message.to_dict(), container_name="chats")
+        self.cosmos_db_service.create_item(message.to_dict(), container_name="chats")

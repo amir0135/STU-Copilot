@@ -13,7 +13,7 @@ logging.getLogger("azure.cosmos").setLevel(logging.WARNING)
 @cl.on_chat_start
 async def on_chat_start():
     cl.user_session.set("user_id", "test_user")
-    cl.user_session.set("agent", ChatService())
+    cl.user_session.set("chat_service", ChatService())
     cl.user_session.set("chat_history", ChatHistory())
     cl.user_session.set("chat_thread", None)
 
