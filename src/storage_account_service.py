@@ -1,9 +1,6 @@
 from azure.storage.blob import BlobServiceClient
 from typing import Any
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 class StorageAccountService:
     def __init__(self, account_name: str = None, account_key: str = None):

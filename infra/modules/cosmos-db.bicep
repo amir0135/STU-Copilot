@@ -97,9 +97,7 @@ resource cosmosDB 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' = {
           }
           partitionKey: {
             paths: [
-              '/Id'
-              '/ThreadId'
-              '/UserId'
+              '/id'              
             ]
             kind: 'MultiHash'
             version: 2
