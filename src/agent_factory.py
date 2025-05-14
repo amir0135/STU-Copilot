@@ -21,7 +21,11 @@ class AgentFactory:
         self.base_kernel = Kernel()
         self.base_client = AsyncOpenAI(api_key=api_key, base_url=endpoint)
 
-    def create_agent(self, agent_name: str, model_name: str) -> ChatCompletionAgent:
+    def create_agent(self,
+                     agent_name: str,
+                     model_name: str,
+                     instructions: str = None
+                     ) -> ChatCompletionAgent:
         """Create a chat completion agent."""
         kernel = self.base_kernel.clone()
         kernel.add_service(
@@ -34,7 +38,7 @@ class AgentFactory:
         return ChatCompletionAgent(
             kernel=kernel,
             name=agent_name,
-            instructions=load_prompt(agent_name),
+            instructions=instructions or load_prompt(agent_name),
         )
 
     @staticmethod

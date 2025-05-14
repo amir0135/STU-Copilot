@@ -3,7 +3,8 @@ from agent_factory import AgentFactory
 from plugin_factory import PluginFactory
 import chainlit as cl
 from cosmos_db_service import CosmosDBService
-from data_models import ChatMessage
+from data_models import ChatMessage, ChatThread
+
 
 class ChatService:
     """Service for managing chat agents and plugins."""
@@ -26,9 +27,29 @@ class ChatService:
             plugin_name="tools")
 
         return communicator_agent
-    
-    def persist_message(self, chat_message: cl.Message, user_id: str):
+
+    def persist_chat_message(self, chat_message: cl.Message, user_id: str):
         """Persist the chat message to the database."""
-        
-        message = ChatMessage(message=chat_message, user_id=user_id)    
-        self.cosmos_db_service.create_item(message.to_dict(), container_name="chats")
+
+        message = ChatMessage(message=chat_message, user_id=user_id)
+        self.cosmos_db_service.create_item(
+            message.to_dict(), container_name="chats")
+
+    async def persist_chat_thread(self, initial_message: cl.Message, user_id: str):
+        """Persist the chat thread to the database."""
+
+        briefer_agent = self.agent_factory.create_agent(
+            agent_name="briefer_agent",
+            model_name="gpt-4.1-nano",
+            instructions="Summarize the message in less than 5 words."
+        )
+        response = await briefer_agent.get_response(messages=initial_message.content)
+        print(response.content)
+        thread = ChatThread(
+            thread_id=initial_message.thread_id,
+            user_id=user_id,
+            title=response.content.content
+        )
+        print(thread.to_dict())
+        self.cosmos_db_service.create_item(
+            thread.to_dict(), container_name="chats")
