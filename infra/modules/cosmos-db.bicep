@@ -8,18 +8,21 @@ param totalThroughputLimit int = 400
 resource cosmosDB 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' = {
   name: name
   location: location
-  tags: tags
+  tags: {
+    Environment: tags.environment
+    SecurityControl: 'Ignore'
+  }
   kind: 'GlobalDocumentDB'
   identity: {
     type: 'None'
-  }
+  }  
   properties: {
     publicNetworkAccess: 'Enabled'
     enableAutomaticFailover: true
     enableMultipleWriteLocations: false
     isVirtualNetworkFilterEnabled: false
     virtualNetworkRules: []
-    disableKeyBasedMetadataWriteAccess: false
+    disableKeyBasedMetadataWriteAccess: false    
     enableFreeTier: false
     enableAnalyticalStorage: false
     analyticalStorageConfiguration: {
