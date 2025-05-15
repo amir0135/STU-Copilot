@@ -6,6 +6,9 @@ class CosmosDBService:
         endpoint = os.environ.get('COSMOS_ENDPOINT')
         key = os.environ.get('COSMOS_KEY')
         database_name = os.environ.get('COSMOS_DATABASE')
+        if not endpoint or not key or not database_name:
+            raise EnvironmentError(
+                "CosmosDB credentials are not set in environment variables.")
         self.client = CosmosClient(endpoint, key)
         self.database = self.client.get_database_client(database_name)
 
