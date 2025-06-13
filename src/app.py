@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict, Optional
 import chainlit as cl
 from chat_service import ChatService
 from semantic_kernel.contents import ChatHistory
@@ -12,6 +12,23 @@ logging.getLogger("azure").setLevel(logging.WARNING)
 logging.getLogger("azure.cosmos").setLevel(logging.WARNING)
 logging.getLogger("openai").setLevel(logging.INFO)
 logging.getLogger("semantic_kernel").setLevel(logging.INFO)
+
+
+@cl.oauth_callback
+async def oauth_callback(
+    provider_id: str,
+    token: str,
+    raw_user_data: Dict[str, str],
+    default_user: cl.User,
+) -> Optional[cl.User]:
+    print(f"OAuth callback for provider {provider_id}")
+    default_user.identifier = raw_user_data["mail"]
+    default_user.display_name = raw_user_data["displayName"]
+    default_user.metadata["user_id"] = raw_user_data["id"]
+    default_user.metadata["first_name"] = raw_user_data["givenName"]
+    default_user.metadata["job_title"] = raw_user_data["jobTitle"]
+    default_user.metadata["office_location"] = raw_user_data["officeLocation"]
+    return default_user
 
 
 @cl.on_chat_start
