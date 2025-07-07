@@ -6,8 +6,8 @@ param location string = 'swedencentral'
 @description('The name of the environment.')
 param environmentName string = 'dev'
 
-@description('The name of the prefix to use for the resources.')
-param prefix string = 'stu-copilot'
+@description('The name of the postfix to use for the resources.')
+param postfix string = 'stu-copilot'
 
 @description('Tags to apply to the resources.')
 param tags object = {
@@ -15,7 +15,7 @@ param tags object = {
 }
 
 @description('The name of the resource group.')
-var resourceGroupName = 'rg-${environmentName}-${prefix}'
+var resourceGroupName = 'rg-${environmentName}-${postfix}'
 
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2025-03-01' = {
   name: resourceGroupName
@@ -27,7 +27,7 @@ module logAnalytics 'modules/log-analytics.bicep' = {
   name: 'logAnalytics'
   scope: resourceGroup
   params: {
-    name: 'log-${environmentName}-${prefix}'
+    name: 'log-${environmentName}-${postfix}'
     tags: tags
   }
 }
@@ -36,7 +36,7 @@ module applicationInsights 'modules/application-insights.bicep' = {
   name: 'applicationInsights'
   scope: resourceGroup
   params: {
-    name: 'appi-${environmentName}-${prefix}'
+    name: 'appi-${environmentName}-${postfix}'
     logAnalyticsId: logAnalytics.outputs.logAnalyticsId
     tags: tags
   }
@@ -46,7 +46,7 @@ module storageAccount 'modules/storage-account.bicep' = {
   name: 'storageAccount'
   scope: resourceGroup
   params: {
-    name: 'st${environmentName}${prefix}'
+    name: 'st${environmentName}${postfix}'
     tags: tags
   }
 }
@@ -55,59 +55,43 @@ module keyVault 'modules/key-vault.bicep' = {
   name: 'keyVault'
   scope: resourceGroup
   params: {
-    name: 'kv-${environmentName}-${prefix}'
+    name: 'kv-${environmentName}-${postfix}'
     tags: tags
   }
 }
 
-module containerRegistry 'modules/container-registry.bicep' = {
-  name: 'containerRegistry'
-  scope: resourceGroup
-  params: {
-    name: 'acr${environmentName}${prefix}'
-    tags: tags
-  }
-}
-
-module aiServices 'modules/ai-services.bicep' = {
-  name: 'aiServices'
-  scope: resourceGroup
-  params: {
-    name: 'ais-${environmentName}-${prefix}'
-    tags: tags
-  }
-}
+// module containerRegistry 'modules/container-registry.bicep' = {
+//   name: 'containerRegistry'
+//   scope: resourceGroup
+//   params: {
+//     name: 'acr${environmentName}${postfix}'
+//     tags: tags
+//   }
+// }
 
 module aiSearch 'modules/ai-search.bicep' = {
   name: 'aiSearch'
   scope: resourceGroup
   params: {
-    name: 'srch-${environmentName}-${prefix}'
+    name: 'srch-${environmentName}-${postfix}'
     tags: tags
   }
 }
-
-module aiHub 'modules/ai-hub.bicep' = {
-  name: 'aiHub'
-  scope: resourceGroup
-  params: {
-    name: 'hub-${environmentName}-${prefix}'
-    tags: tags
-    storageAccountId: storageAccount.outputs.storageAccountId
-    keyVaultId: keyVault.outputs.keyVaultId
-    applicationInsightsId: applicationInsights.outputs.applicationInsightsId
-    containerRegistryId: containerRegistry.outputs.containerRegistryId
-    aiServicesId: aiServices.outputs.aiServicesId
-    aiServicesName: aiServices.outputs.aiServicesName
-    aiServicesTarget: aiServices.outputs.aiServicesTarget
-  }
-}
-
 module cosmosDB 'modules/cosmos-db.bicep' = {
   name: 'cosmosDB'
   scope: resourceGroup
   params: {
-    name: 'cosmos-${environmentName}-${prefix}'
+    name: 'cosmos-${environmentName}-${postfix}'
+    tags: tags
+  }
+}
+
+module aiFoundry 'modules/ai-foundry.bicep' = {
+  name: 'aiFoundry'
+  scope: resourceGroup
+  params: {
+    name: 'aif-${environmentName}-${postfix}'
+    projectName: 'proj-${environmentName}-${postfix}'
     tags: tags
   }
 }
@@ -122,15 +106,15 @@ output storageAccountId string = storageAccount.outputs.storageAccountId
 output storageAccountName string = storageAccount.outputs.storageAccountName
 output keyVaultId string = keyVault.outputs.keyVaultId
 output keyVaultName string = keyVault.outputs.keyVaultName
-output containerRegistryId string = containerRegistry.outputs.containerRegistryId
-output containerRegistryName string = containerRegistry.outputs.containerRegistryName
-output aiServicesId string = aiServices.outputs.aiServicesId
-output aiServicesName string = aiServices.outputs.aiServicesName
-output aiServicesTarget string = aiServices.outputs.aiServicesTarget
+//output containerRegistryId string = containerRegistry.outputs.containerRegistryId
+//output containerRegistryName string = containerRegistry.outputs.containerRegistryName
 output aiSearchId string = aiSearch.outputs.aiSearchId
 output aiSearchName string = aiSearch.outputs.aiSearchName
-output aiHubId string = aiHub.outputs.aiHubId
-output aiHubName string = aiHub.outputs.aiHubName
 output cosmosDBId string = cosmosDB.outputs.cosmosDBId
 output cosmosDBName string = cosmosDB.outputs.cosmosDBName
 output cosmosDBDocumentEndpoint string = cosmosDB.outputs.cosmosDBDocumentEndpoint
+output aiFoundryId string = aiFoundry.outputs.aiFoundryId
+output aiFoundryName string = aiFoundry.outputs.aiFoundryName
+output aiFoundryEndpoint string = aiFoundry.outputs.aiFoundryEndpoint
+output aiFoundryProjectId string = aiFoundry.outputs.aiFoundryProjectId
+output aiFoundryProjectName string = aiFoundry.outputs.aiFoundryProjectName
