@@ -45,12 +45,13 @@ async def on_message(user_message: cl.Message):
     chat_service: ChatService = cl.user_session.get("chat_service")
     chat_history: ChatHistory = cl.user_session.get("chat_history")
     chat_thread: ChatHistoryAgentThread = cl.user_session.get("chat_thread")
-    agent: ChatCompletionAgent = chat_service.get_communicator_agent()
+    agent: ChatCompletionAgent = chat_service.get_orchestrator_agent()
 
     chat_history.add_user_message(user_message.content)
     answer = cl.Message(content="")
 
-    chat_service.persist_chat_message(user_message, user_id)
+    #chat_service.persist_chat_message(user_message, user_id)
+    logging.info(f"orchestrator_agent: {agent}")
 
     # Stream the agent's response token by token
     async for token in agent.invoke_stream(
@@ -63,14 +64,14 @@ async def on_message(user_message: cl.Message):
     cl.user_session.set("chat_thread", token.thread)
     chat_history.add_assistant_message(answer.content)
 
-    chat_service.persist_chat_message(answer, user_id)
+    #chat_service.persist_chat_message(answer, user_id)
 
     # Send the final message
     await answer.send()
 
     # Persist the chat thread if it is the first message
-    if (len(chat_history) == 2):
-        await chat_service.persist_chat_thread(user_message, user_id)
+    #if (len(chat_history) == 2):
+    #    await chat_service.persist_chat_thread(user_message, user_id)
 
 
 @cl.set_starters  # type: ignore

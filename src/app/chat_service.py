@@ -14,30 +14,22 @@ class ChatService:
         self.agent_factory = AgentFactory()
         self.plugin_factory = PluginFactory(self.agent_factory)
 
-    def get_communicator_agent(self) -> ChatCompletionAgent:
-        """Creates and returns a communicator agent with the necessary plugins."""
+    def get_orchestrator_agent(self) -> ChatCompletionAgent:
+        """Creates and returns an orchestrator agent with the necessary plugins."""
 
-        communicator_agent = self.agent_factory.create_agent(
-            agent_name="communicator_agent",
-            model_name="gpt-4.1-mini"
-        )
+        orchestrator_agent = self.agent_factory.create_orchestrator_agent()
+        return orchestrator_agent
 
-        communicator_agent.kernel.add_plugin(
-            PluginFactory(),
-            plugin_name="tools")
-
-        return communicator_agent
-
-    def persist_chat_message(self, chat_message: cl.Message, user_id: str):
+    def persist_chat_message(self, chat_message: cl.Message, user_id: str) -> None:
         """Persist the chat message to the database."""
 
         message = ChatMessage(message=chat_message, user_id=user_id)
         self.cosmos_db_service.create_item(
             message.to_dict(), container_name="chats")
 
-    async def persist_chat_thread(self, initial_message: cl.Message, user_id: str):
+    def persist_chat_thread(self, initial_message: cl.Message, user_id: str) -> None:
         """Persist the chat thread to the database."""
-        
+
         thread = ChatThread(
             thread_id=initial_message.thread_id,
             user_id=user_id,
