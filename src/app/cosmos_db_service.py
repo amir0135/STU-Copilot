@@ -1,11 +1,12 @@
 import os
 from azure.cosmos import CosmosClient, PartitionKey, exceptions
 
+
 class CosmosDBService:
     def __init__(self):
-        endpoint = os.environ.get('COSMOS_ENDPOINT')
-        key = os.environ.get('COSMOS_KEY')
-        database_name = os.environ.get('COSMOS_DATABASE')
+        endpoint = os.environ.get('COSMOSDB_ENDPOINT')
+        key = os.environ.get('COSMOSDB_KEY')
+        database_name = os.environ.get('COSMOSDB_DATABASE')
         if not endpoint or not key or not database_name:
             raise EnvironmentError(
                 "CosmosDB credentials are not set in environment variables.")

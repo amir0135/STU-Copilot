@@ -1,13 +1,19 @@
 from azure.storage.blob import BlobServiceClient
 from typing import Any
 import os
+import logging
+
+logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger(__name__)
 
 class StorageAccountService:
-    def __init__(self, account_name: str = None, account_key: str = None):
-        if account_name is None:
-            account_name = os.getenv("AZURE_STORAGE_ACCOUNT_NAME")
-        if account_key is None:
-            account_key = os.getenv("AZURE_STORAGE_ACCOUNT_KEY")
+    def __init__(self):
+        account_name = os.getenv("STORAGE_ACCOUNT_NAME")
+        account_key = os.getenv("STORAGE_ACCOUNT_KEY")
+        
+        if not account_name or not account_key:
+            raise EnvironmentError("Storage account name or key is not set in environment variables.")
+                
         connection_string = (
             f"DefaultEndpointsProtocol=https;"
             f"AccountName={account_name};"
