@@ -6,7 +6,7 @@ from semantic_kernel.connectors.ai.open_ai import (
     AzureChatCompletion,
     OpenAIChatPromptExecutionSettings,
 )
-from utils import load_prompt
+from prompt_cache import load_prompt
 
 
 class AgentFactory:

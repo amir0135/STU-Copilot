@@ -33,7 +33,7 @@ class ChatService:
         thread = ChatThread(
             thread_id=initial_message.thread_id,
             user_id=user_id,
-            title=f"{str(initial_message.content)[0:25]}..."
+            title=f"{str(initial_message.content)[0:50]}..."
         )
         self.cosmos_db_service.create_item(
             thread.to_dict(), container_name="chats")

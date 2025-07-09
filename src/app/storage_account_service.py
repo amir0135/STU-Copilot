@@ -1,6 +1,10 @@
 from azure.storage.blob import BlobServiceClient
 from typing import Any
 import os
+import logging
+
+logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger(__name__)
 
 class StorageAccountService:
     def __init__(self):

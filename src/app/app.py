@@ -13,6 +13,7 @@ logging.getLogger("azure.cosmos").setLevel(logging.WARNING)
 logging.getLogger("openai").setLevel(logging.INFO)
 logging.getLogger("semantic_kernel").setLevel(logging.INFO)
 
+logger = logging.getLogger(__name__)
 
 @cl.oauth_callback
 async def oauth_callback(
@@ -45,16 +46,15 @@ async def on_message(user_message: cl.Message):
     chat_service: ChatService = cl.user_session.get("chat_service")
     chat_history: ChatHistory = cl.user_session.get("chat_history")
     chat_thread: ChatHistoryAgentThread = cl.user_session.get("chat_thread")
-    agent: ChatCompletionAgent = chat_service.get_orchestrator_agent()
+    orchestrator_agent: ChatCompletionAgent = chat_service.get_orchestrator_agent()
 
     chat_history.add_user_message(user_message.content)
     answer = cl.Message(content="")
 
-    #chat_service.persist_chat_message(user_message, user_id)
-    logging.info(f"orchestrator_agent: {agent}")
+    chat_service.persist_chat_message(user_message, user_id)    
 
     # Stream the agent's response token by token
-    async for token in agent.invoke_stream(
+    async for token in orchestrator_agent.invoke_stream(
             messages=chat_history,
             thread=chat_thread
     ):
@@ -64,14 +64,14 @@ async def on_message(user_message: cl.Message):
     cl.user_session.set("chat_thread", token.thread)
     chat_history.add_assistant_message(answer.content)
 
-    #chat_service.persist_chat_message(answer, user_id)
+    chat_service.persist_chat_message(answer, user_id)
 
     # Send the final message
     await answer.send()
 
     # Persist the chat thread if it is the first message
-    #if (len(chat_history) == 2):
-    #    await chat_service.persist_chat_thread(user_message, user_id)
+    if (len(chat_history) == 2):
+       chat_service.persist_chat_thread(user_message, user_id)
 
 
 @cl.set_starters  # type: ignore
