@@ -15,6 +15,10 @@ logging.getLogger("semantic_kernel").setLevel(logging.INFO)
 
 logger = logging.getLogger(__name__)
 
+chat_history: ChatHistory = ChatHistory()
+chat_service: ChatService = ChatService()
+
+
 @cl.oauth_callback
 async def oauth_callback(
     provider_id: str,
@@ -34,15 +38,27 @@ async def oauth_callback(
 
 @cl.on_chat_start
 async def on_chat_start():
-    cl.user_session.set("user_id", "test_user")
-    cl.user_session.set("chat_service", ChatService())
-    cl.user_session.set("chat_history", ChatHistory())
+    user = cl.user_session.get("user")
+    welcome_message = chat_service.get_welcome_message(
+        user_first_name=user.metadata.get("first_name", "Guest"),
+        user_job_title=user.metadata.get("job_title", None),
+    )
+
+    # Show the welcome message to the user
+    await cl.Message(content=welcome_message).send()
+
+    chat_history.add_assistant_message(welcome_message)
+
+    # cl.user_session.set("user_id",)
+    cl.user_session.set("chat_service", chat_service)
+    cl.user_session.set("chat_history", chat_history)
     cl.user_session.set("chat_thread", None)
 
 
 @cl.on_message
 async def on_message(user_message: cl.Message):
     user_id: str = cl.user_session.get("user_id")
+    user_job_title: str = cl.user_session.get("job_title")
     chat_service: ChatService = cl.user_session.get("chat_service")
     chat_history: ChatHistory = cl.user_session.get("chat_history")
     chat_thread: ChatHistoryAgentThread = cl.user_session.get("chat_thread")
@@ -51,7 +67,7 @@ async def on_message(user_message: cl.Message):
     chat_history.add_user_message(user_message.content)
     answer = cl.Message(content="")
 
-    chat_service.persist_chat_message(user_message, user_id)    
+    chat_service.persist_chat_message(user_message, user_id)
 
     # Stream the agent's response token by token
     async for token in orchestrator_agent.invoke_stream(
@@ -71,7 +87,7 @@ async def on_message(user_message: cl.Message):
 
     # Persist the chat thread if it is the first message
     if (len(chat_history) == 2):
-       chat_service.persist_chat_thread(user_message, user_id)
+        chat_service.persist_chat_thread(user_message, user_id, user_job_title)
 
 
 @cl.set_starters  # type: ignore

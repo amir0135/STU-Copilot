@@ -39,10 +39,17 @@ class ChatMessage:
 
 
 class ChatThread:
-    def __init__(self, thread_id: str, user_id: str, title: str = None, created_at: Optional[str] = None):
+    def __init__(self,
+                 thread_id: str,
+                 user_id: str,
+                 title: str = None,
+                 user_job_title: Optional[str] = None,
+                 created_at: Optional[str] = None
+                 ):
         self.id = thread_id  # Unique thread identifier
         self.user_id = user_id  # User identifier
         self.title = title  # Optional thread title
+        self.user_job_title = user_job_title  # Optional user job title
         self.messages = []  # List of ChatMessage objects
         self.created_at = created_at or datetime.now(timezone.utc).isoformat()
         self.type = "thread"
@@ -52,6 +59,7 @@ class ChatThread:
             "id": self.id,
             "user_id": self.user_id,
             "title": self.title,
+            "user_job_title": self.user_job_title,
             "messages": [msg.to_dict() for msg in self.messages],
             "created_at": self.created_at,
             "type": self.type
@@ -65,6 +73,7 @@ class ChatThread:
             id=data.get("id"),
             user_id=data.get("user_id"),
             title=data.get("title"),
+            user_job_title=data.get("user_job_title"),
             messages=messages,
             created_at=data.get("created_at"),
             type=data.get("type", "thread")
