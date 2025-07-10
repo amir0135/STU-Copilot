@@ -1,6 +1,3 @@
-from semantic_kernel.agents import ChatCompletionAgent
-from agent_factory import AgentFactory
-from plugin_factory import PluginFactory
 import chainlit as cl
 from cosmos_db_service import CosmosDBService
 from data_models import ChatMessage, ChatThread
@@ -12,14 +9,6 @@ class ChatService:
 
     def __init__(self):
         self.cosmos_db_service = CosmosDBService()
-        self.agent_factory = AgentFactory()
-        self.plugin_factory = PluginFactory(self.agent_factory)
-
-    def get_orchestrator_agent(self) -> ChatCompletionAgent:
-        """Creates and returns an orchestrator agent with the necessary plugins."""
-
-        orchestrator_agent = self.agent_factory.create_orchestrator_agent()
-        return orchestrator_agent
 
     def persist_chat_message(self, chat_message: cl.Message, user_id: str) -> None:
         """Persist the chat message to the database."""
@@ -46,8 +35,8 @@ class ChatService:
         welcome_message = f"Hi **{user_first_name}**, welcome to the STU Copilot! "
 
         if user_job_title:
-            welcome_message += f"I consider your role as a **{user_job_title}** while assisting you. How can I help? 🙂"
-        else:
-            welcome_message += "I can assist you with your queries. How can I help? 🙂"
+            welcome_message += f"I consider your role as a **{user_job_title}** while assisting you. "
+
+        welcome_message += "If you have any questions or need support related to Microsoft solutions, sales, technical guidance, or industry insights, please let me know. "
 
         return welcome_message

@@ -19,10 +19,26 @@ class AgentFactory:
             raise EnvironmentError(
                 "Missing Azure Open AI endpoint or API key.")
 
-    def create_orchestrator_agent(self) -> ChatCompletionAgent:
+    def create_kernel(self,
+                      agent_name: str,
+                      model_name: str,
+                      api_version: str = "2024-12-01-preview") -> Kernel:
+        """Create a kernel with the desired model."""
+        kernel = Kernel()
+        kernel.add_service(
+            AzureChatCompletion(
+                deployment_name=model_name,
+                service_id=agent_name,
+                api_version=api_version)
+        )
+
+        return kernel
+
+    def get_orchestrator_agent(self) -> ChatCompletionAgent:
         """Create an orchestrator agent with the necessary plugins."""
         agent_name = "orchestrator_agent"
         model_name = "gpt-4.1"
+        
 
         # Create a new kernel instance with the OpenAI service
         kernel = self.create_kernel(
@@ -36,7 +52,7 @@ class AgentFactory:
             name=agent_name,
             instructions=load_prompt(agent_name),
             plugins=[
-                self.create_questioner_agent(),  # Add the questioner agent as a plugin
+                # self.get_questioner_agent(),  # Add the questioner agent as a plugin
             ]
         )
 
@@ -48,7 +64,7 @@ class AgentFactory:
 
         return orchestrator_agent
 
-    def create_questioner_agent(self) -> ChatCompletionAgent:
+    def get_questioner_agent(self) -> ChatCompletionAgent:
         """Create a questioner agent with the necessary plugins."""
         agent_name = "questioner_agent"
         model_name = "gpt-4.1-mini"
@@ -68,17 +84,25 @@ class AgentFactory:
 
         return questioner_agent
 
-    def create_kernel(self,
-                      agent_name: str,
-                      model_name: str) -> Kernel:
-        """Create a kernel with the desired model."""
-        kernel = Kernel()
-        kernel.add_service(
-            AzureChatCompletion(
-                deployment_name=model_name,
-                service_id=agent_name)
+    def get_planner_agent(self) -> ChatCompletionAgent:
+        """Create a planner agent with the necessary plugins."""
+        agent_name = "planner_agent"
+        model_name = "o3-mini"
+
+        # Clone the base kernel and add the OpenAI service
+        kernel = self.create_kernel(
+            agent_name=agent_name,
+            model_name=model_name
         )
-        return kernel
+
+        # Create the agent
+        planner_agent = ChatCompletionAgent(
+            kernel=kernel,
+            name=agent_name,
+            instructions=load_prompt(agent_name)
+        )
+
+        return planner_agent
 
     # def create_agent(self,
     #                  kernel: Kernel,

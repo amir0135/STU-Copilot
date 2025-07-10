@@ -1,6 +1,7 @@
 from typing import List, Dict, Optional
 import chainlit as cl
 from chat_service import ChatService
+from agent_factory import AgentFactory
 from semantic_kernel.contents import ChatHistory
 from semantic_kernel.agents import ChatCompletionAgent, ChatHistoryAgentThread
 import logging
@@ -15,9 +16,12 @@ logging.getLogger("semantic_kernel").setLevel(logging.INFO)
 
 logger = logging.getLogger(__name__)
 
-chat_history: ChatHistory = ChatHistory()
+# Initialize services and agents
 chat_service: ChatService = ChatService()
-
+agent_factory: AgentFactory = AgentFactory()
+orchestrator_agent: ChatCompletionAgent = agent_factory.get_orchestrator_agent()
+questioner_agent: ChatCompletionAgent = agent_factory.get_questioner_agent()
+planner_agent: ChatCompletionAgent = agent_factory.get_planner_agent()
 
 @cl.oauth_callback
 async def oauth_callback(
@@ -38,6 +42,7 @@ async def oauth_callback(
 
 @cl.on_chat_start
 async def on_chat_start():
+    chat_history: ChatHistory = ChatHistory()
     user = cl.user_session.get("user")
     welcome_message = chat_service.get_welcome_message(
         user_first_name=user.metadata.get("first_name", "Guest"),
@@ -46,13 +51,15 @@ async def on_chat_start():
 
     # Show the welcome message to the user
     await cl.Message(content=welcome_message).send()
-
     chat_history.add_assistant_message(welcome_message)
+    
+    loading_message = cl.Message(content="⏳ Thinking...")
+    
 
-    # cl.user_session.set("user_id",)
     cl.user_session.set("chat_service", chat_service)
     cl.user_session.set("chat_history", chat_history)
     cl.user_session.set("chat_thread", None)
+    cl.user_session.set("loading_message", loading_message)
 
 
 @cl.on_message
@@ -62,15 +69,27 @@ async def on_message(user_message: cl.Message):
     chat_service: ChatService = cl.user_session.get("chat_service")
     chat_history: ChatHistory = cl.user_session.get("chat_history")
     chat_thread: ChatHistoryAgentThread = cl.user_session.get("chat_thread")
-    orchestrator_agent: ChatCompletionAgent = chat_service.get_orchestrator_agent()
+    loading_message: cl.Message = cl.user_session.get("loading_message")
+    responder_agent: ChatCompletionAgent = None
 
     chat_history.add_user_message(user_message.content)
     answer = cl.Message(content="")
+    
 
     chat_service.persist_chat_message(user_message, user_id)
 
+    # If this is the beginning of a new chat thread, use the questioner agent    
+    if (len(chat_history) == 2):
+        responder_agent = questioner_agent
+    # Otherwise, use the orchestrator agent
+    elif (len(chat_history) == 4):        
+        responder_agent = planner_agent        
+        await loading_message.send()
+    else:
+        responder_agent = orchestrator_agent    
+        
     # Stream the agent's response token by token
-    async for token in orchestrator_agent.invoke_stream(
+    async for token in responder_agent.invoke_stream(
             messages=chat_history,
             thread=chat_thread
     ):
@@ -86,7 +105,7 @@ async def on_message(user_message: cl.Message):
     await answer.send()
 
     # Persist the chat thread if it is the first message
-    if (len(chat_history) == 2):
+    if (len(chat_history) == 3):
         chat_service.persist_chat_thread(user_message, user_id, user_job_title)
 
 
