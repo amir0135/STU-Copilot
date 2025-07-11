@@ -4,5 +4,3 @@ semantic-kernel[azure]
 openai
 azure-cosmos
 azure-storage-blob
-aiohttp
-backoff
