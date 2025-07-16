@@ -14,7 +14,7 @@ class FoundryService:
 
     def __init__(self):
         self.endpoint = os.environ.get('AZURE_OPENAI_ENDPOINT')
-        self.api_key = os.environ.get('AZURE_OPENAI_API_KEY')
+        self.api_key = os.environ.get('AI_FOUNDRY_KEY')
         self.embedding_model = "text-embedding-3-small"
         self.chat_model = "gpt-4.1-nano"
         self.api_version = "2024-12-01-preview"
@@ -37,18 +37,16 @@ class FoundryService:
             api_key=self.api_key
         )
 
-    def create_embedding(self, text: str) -> list:
+    def generate_embedding(self, text: str) -> list:
         """Get the embedding for a given text."""
         if not text:
             return []
-        if len(text) > 8192:
-            text = self.summarize_text(text)
-
+        
         response: CreateEmbeddingResponse = self.embedding_client.embeddings.create(
             input=text,
             model=self.embedding_model,
             encoding_format="float",
-            dimensions=500,
+            dimensions=1536,
         )
         return response.data[0].embedding if response.data else []
 

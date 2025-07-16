@@ -154,9 +154,12 @@ async def process_repository(repo: RepositoryInfo) -> None:
         
         # Generate description for the repository
         context = f"{repo.description}\n\n{readme_content}"
-        summary, keywords = foundry_service.summarize_and_generate_keywords(context)
+        summary, keywords = foundry_service.summarize_and_generate_keywords(context)                
         repo.description = summary
         repo.keywords = keywords
+        
+        # Generate embedding for the repository
+        repo.embedding = foundry_service.generate_embedding(summary)
 
         # Save repository to CosmosDB
         cosmos_db_service.upsert_item(

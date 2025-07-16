@@ -1,6 +1,5 @@
 
 from typing import Dict, Optional
-from datetime import datetime
 
 
 class RepositoryInfo:
@@ -8,7 +7,8 @@ class RepositoryInfo:
 
     def __init__(self, id: str, organization: str, name: str, url: str,
                  updated_at: str, stars_count: int, archived: bool,
-                 description: Optional[str] = None, keywords: Optional[str] = None):
+                 description: Optional[str] = None, keywords: Optional[str] = None,
+                 embedding: Optional[float] = None):
         self.id = id  # Unique identifier for the repository
         self.organization = organization
         self.name = name
@@ -18,6 +18,7 @@ class RepositoryInfo:
         self.updated_at = updated_at
         self.stars_count = stars_count
         self.archived = archived
+        self.embedding = embedding
 
     def to_dict(self) -> Dict:
         """Convert the repository info to a dictionary for saving to CosmosDB"""
@@ -30,5 +31,6 @@ class RepositoryInfo:
             "keywords": self.keywords,
             "updated_at": self.updated_at,
             "stars_count": self.stars_count,
-            "archived": self.archived
+            "archived": self.archived,
+            "embedding": self.embedding
         }
