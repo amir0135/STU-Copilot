@@ -73,7 +73,8 @@ class CosmosDBService:
         full_text = ', '.join(f'"{word}"' for word in search_terms.split())
 
         hybrid_query = f"""
-            SELECT TOP 5 c.name, VectorDistance(c.embedding, {search_embedding}) AS similarity_score
+            SELECT TOP 5 c.name, c.url, c.description, c.starts_count, c.archived, c.updated_at, 
+            VectorDistance(c.embedding, {search_embedding}) AS similarity_score
             FROM c
             ORDER BY RANK RRF(VectorDistance(c.embedding, {search_embedding}), FullTextScore(c.name, '@full_text'))           
         """
