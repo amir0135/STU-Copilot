@@ -2,7 +2,7 @@ import os
 from glob import glob
 import logging
 
-logging.basicConfig(level=logging.INFO) 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 PROMPT_CACHE = {}
@@ -14,7 +14,7 @@ for prompt_path in glob(os.path.join(PROMPTS_DIR, "*.prompty")):
     with open(prompt_path, "r", encoding="utf-8") as f:
         PROMPT_CACHE[prompt_name] = f.read()
         logger.info(f"Loaded prompt into cache for: {prompt_name} ")
-        
+
 
 def load_prompt(prompt_name: str) -> str:
     """Fetch prompt from in-memory cache."""
