@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, Dict
 import chainlit as cl
 
 
@@ -78,3 +78,6 @@ class ChatThread:
             created_at=data.get("created_at"),
             type=data.get("type", "thread")
         )
+
+
+

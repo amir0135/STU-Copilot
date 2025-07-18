@@ -1,8 +1,12 @@
 import chainlit as cl
-from cosmos_db_service import CosmosDBService
-from data_models import ChatMessage, ChatThread
+from .cosmos_db_service import CosmosDBService
+from .data_models import ChatMessage, ChatThread
 from typing import Optional
+import logging
 
+# Basic logging configuration
+logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger(__name__)
 
 class ChatService:
     """Service for managing chat agents and plugins."""

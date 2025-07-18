@@ -1,0 +1,5 @@
+dotenv
+aiohttp
+azure-storage-blob
+backoff
+openai

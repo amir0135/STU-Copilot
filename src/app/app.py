@@ -1,19 +1,21 @@
 from typing import List, Dict, Optional
 import chainlit as cl
-from chat_service import ChatService
-from agent_factory import AgentFactory
+from services.chat_service import ChatService
+from services.agent_factory import AgentFactory
 from semantic_kernel.contents import ChatHistory
 from semantic_kernel.agents import ChatCompletionAgent, ChatHistoryAgentThread
 import logging
 
 # Basic logging configuration
 logging.basicConfig(level=logging.WARNING)
-
 logging.getLogger("azure").setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("azure.cosmos").setLevel(logging.WARNING)
 logging.getLogger("openai").setLevel(logging.INFO)
 logging.getLogger("semantic_kernel").setLevel(logging.INFO)
-
+logging.getLogger("fastmcp").setLevel(logging.WARNING)
+logging.getLogger("http").setLevel(logging.ERROR)
+logging.getLogger("asyncio").setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
 
 # Initialize services and agents
@@ -22,6 +24,9 @@ agent_factory: AgentFactory = AgentFactory()
 orchestrator_agent: ChatCompletionAgent = agent_factory.get_orchestrator_agent()
 questioner_agent: ChatCompletionAgent = agent_factory.get_questioner_agent()
 planner_agent: ChatCompletionAgent = agent_factory.get_planner_agent()
+github_agent: ChatCompletionAgent = agent_factory.get_github_agent()
+microsoft_docs_agent: ChatCompletionAgent = agent_factory.get_microsoft_docs_agent()
+
 
 @cl.oauth_callback
 async def oauth_callback(
@@ -52,9 +57,8 @@ async def on_chat_start():
     # Show the welcome message to the user
     await cl.Message(content=welcome_message).send()
     chat_history.add_assistant_message(welcome_message)
-    
+
     loading_message = cl.Message(content="⏳ Thinking...")
-    
 
     cl.user_session.set("chat_service", chat_service)
     cl.user_session.set("chat_history", chat_history)
@@ -70,29 +74,28 @@ async def on_message(user_message: cl.Message):
     chat_history: ChatHistory = cl.user_session.get("chat_history")
     chat_thread: ChatHistoryAgentThread = cl.user_session.get("chat_thread")
     loading_message: cl.Message = cl.user_session.get("loading_message")
-    responder_agent: ChatCompletionAgent = None
+    responder_agent: ChatCompletionAgent = microsoft_docs_agent
 
     chat_history.add_user_message(user_message.content)
     answer = cl.Message(content="")
+
+    chat_service.persist_chat_message(user_message, user_id)    
     
+    # If this is the beginning of a new chat thread, use the questioner agent
+    # if (len(chat_history) == 2):
+    #     responder_agent = questioner_agent
+    # # Otherwise, use the orchestrator agent
+    # elif (len(chat_history) == 4):
+    #     responder_agent = planner_agent
+    #     await loading_message.send()
+    # else:
+    #     responder_agent = orchestrator_agent
 
-    chat_service.persist_chat_message(user_message, user_id)
-
-    # If this is the beginning of a new chat thread, use the questioner agent    
-    if (len(chat_history) == 2):
-        responder_agent = questioner_agent
-    # Otherwise, use the orchestrator agent
-    elif (len(chat_history) == 4):        
-        responder_agent = planner_agent        
-        await loading_message.send()
-    else:
-        responder_agent = orchestrator_agent    
-        
     # Stream the agent's response token by token
     async for token in responder_agent.invoke_stream(
             messages=chat_history,
             thread=chat_thread
-    ):
+    ):        
         if token.content:
             await answer.stream_token(token.content.content)
 
