@@ -1,6 +1,6 @@
 dotenv
 chainlit
-semantic-kernel[azure]
+semantic-kernel[all]
 openai
 azure-cosmos
 azure-storage-blob

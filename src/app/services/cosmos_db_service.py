@@ -1,9 +1,13 @@
 import os
 from azure.cosmos import CosmosClient, PartitionKey, exceptions, ContainerProxy, CosmosDict
 from .foundry_service import FoundryService
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv(override=True)
 
 # Initialize the FoundryService for embedding generation
-foundry_service = FoundryService()
+
 
 
 class CosmosDBService:
@@ -16,6 +20,7 @@ class CosmosDBService:
                 "CosmosDB credentials are not set in environment variables.")
         self.client = CosmosClient(endpoint, key)
         self.database = self.client.get_database_client(database_name)
+        self.foundry_service = FoundryService()
 
     def get_container(self, container_name: str) -> ContainerProxy:
         return self.database.get_container_client(container_name)
@@ -66,7 +71,7 @@ class CosmosDBService:
         """
 
         # Generate the embedding for the search terms
-        search_embedding = foundry_service.generate_embedding(search_terms)
+        search_embedding = self.foundry_service.generate_embedding(search_terms)
         # Split search terms to a quoted, comma-separated string for full-text search
         full_text = ', '.join(f'"{word}"' for word in search_terms.split())
 

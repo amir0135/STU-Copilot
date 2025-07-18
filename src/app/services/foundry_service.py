@@ -3,9 +3,13 @@ from openai import AzureOpenAI
 from openai.types import CreateEmbeddingResponse
 import json
 import logging
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv(override=True)
 
 # Configure logging
-logging.basicConfig(level=logging.WARNING)
+#logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
