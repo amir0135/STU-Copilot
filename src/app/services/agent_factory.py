@@ -117,12 +117,12 @@ class AgentFactory:
             name=agent_name,
             instructions=load_prompt(agent_name),
             plugins=[
-                self.plugin_factory.github_tool            
+                self.plugin_factory.github_tool
             ]
         )
 
         return github_agent
-    
+
     def get_microsoft_docs_agent(self) -> ChatCompletionAgent:
         """Create a Microsoft Docs agent with the necessary plugins."""
         agent_name = "microsoft_docs_agent"
@@ -134,21 +134,40 @@ class AgentFactory:
             model_name=model_name
         )
         kernel.add_plugins([
-            self.plugin_factory.microsoft_docs_tool,
-            #elf.plugin_factory.price_generator_tool
+            self.plugin_factory.microsoft_docs_tool
         ])
-        
+
         # Create the agent
         microsoft_docs_agent = ChatCompletionAgent(
             kernel=kernel,
             name=agent_name,
-            instructions="""
-            Answer the user's question using all provided plugins.
-            Run plugins one by one and wait for the result before continuing.
-            """,
+            instructions=load_prompt(agent_name),
         )
 
         return microsoft_docs_agent
+
+    def get_blog_posts_agent(self) -> ChatCompletionAgent:
+        """Create a Blog Posts agent with the necessary plugins."""
+        agent_name = "blog_posts_agent"
+        model_name = "gpt-4.1-nano"
+
+        # Clone the base kernel and add the OpenAI service
+        kernel = self.create_kernel(
+            agent_name=agent_name,
+            model_name=model_name
+        )
+
+        # Create the agent
+        blog_posts_agent = ChatCompletionAgent(
+            kernel=kernel,
+            name=agent_name,
+            instructions=load_prompt(agent_name),
+            plugins=[
+                self.plugin_factory.blog_posts_tool
+            ]
+        )
+
+        return blog_posts_agent
 
     # def create_agent(self,
     #                  kernel: Kernel,

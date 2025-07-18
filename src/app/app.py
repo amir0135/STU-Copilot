@@ -26,7 +26,7 @@ questioner_agent: ChatCompletionAgent = agent_factory.get_questioner_agent()
 planner_agent: ChatCompletionAgent = agent_factory.get_planner_agent()
 github_agent: ChatCompletionAgent = agent_factory.get_github_agent()
 microsoft_docs_agent: ChatCompletionAgent = agent_factory.get_microsoft_docs_agent()
-
+blog_posts_agent: ChatCompletionAgent = agent_factory.get_blog_posts_agent()
 
 @cl.oauth_callback
 async def oauth_callback(
@@ -74,7 +74,7 @@ async def on_message(user_message: cl.Message):
     chat_history: ChatHistory = cl.user_session.get("chat_history")
     chat_thread: ChatHistoryAgentThread = cl.user_session.get("chat_thread")
     loading_message: cl.Message = cl.user_session.get("loading_message")
-    responder_agent: ChatCompletionAgent = microsoft_docs_agent
+    responder_agent: ChatCompletionAgent = blog_posts_agent
 
     chat_history.add_user_message(user_message.content)
     answer = cl.Message(content="")

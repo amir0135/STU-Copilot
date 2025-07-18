@@ -157,10 +157,10 @@ class GitHubCrawler:
 
             # Generate description for the repository
             context = f"{repo.description}\n\n{readme_content}"
-            summary, keywords = self.foundry_service.summarize_and_generate_keywords(
+            summary, tags = self.foundry_service.summarize_and_generate_tags(
                 context)
             repo.description = summary
-            repo.keywords = keywords
+            repo.tags = tags
 
             # Generate embedding for the repository
             repo.embedding = self.foundry_service.generate_embedding(summary)

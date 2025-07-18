@@ -49,15 +49,15 @@ class FoundryService:
         )
         return response.data[0].embedding if response.data else []
 
-    def summarize_and_generate_keywords(self, text: str) -> tuple:
-        """Summarize the given text using a GPT model and extract keywords.
+    def summarize_and_generate_tags(self, text: str) -> tuple:
+        """Summarize the given text using a GPT model and extract tags.
 
         Args:
-            text (str): The text to summarize and extract keywords from
+            text (str): The text to summarize and extract tags from
 
         Returns:
-            tuple: (summary, keywords) where summary is the summarized text and 
-                  keywords is a comma-separated string of keywords
+            tuple: (summary, tags) where summary is the summarized text and 
+                  tags is a comma-separated string of tags
         """
         if not text:
             return ("", "")
@@ -74,13 +74,13 @@ class FoundryService:
                             1. Summarize the text into less than 2000 characters, keeping words as similar as possible to the original text.
                                - Remove code blocks, markdown formatting, and unnecessary whitespace
                                - Do not include explanations or comments
-                            
-                            2. Extract exactly 5 keywords that best represent the main topics from the content.
-                            
+
+                            2. Extract exactly 5 tags that best represent the main topics from the content.
+
                             IMPORTANT: You must respond ONLY with a valid JSON object using this exact format:
                             {
                                 "summary": "<your summarized text>",
-                                "keywords": "<five keywords separated by commas>"
+                                "tags": "<five tags separated by commas>"
                             }
                             
                             Do not include any text before or after the JSON object. No markdown formatting, no code blocks, no explanations.
@@ -100,7 +100,7 @@ class FoundryService:
 
             # Default values in case parsing fails
             summary = content
-            keywords = ""
+            tags = ""
 
             # Try to parse as JSON if content looks like JSON
             if content and content.strip():
@@ -114,8 +114,8 @@ class FoundryService:
                         json_content = content_stripped[json_start:json_end+1]
                         data = json.loads(json_content)
                         summary = data.get("summary", "")
-                        keywords = data.get("keywords", "")
-                        if not summary and not keywords:
+                        tags = data.get("tags", "")
+                        if not summary and not tags:
                             logger.warning(
                                 "JSON parsed but missing expected fields")
                     except json.JSONDecodeError as e:
@@ -129,7 +129,7 @@ class FoundryService:
             else:
                 logger.warning("Model response is not in expected JSON format")
 
-            return summary, keywords
+            return summary, tags
 
         except Exception as e:
             logger.error(f"Error during text summarization: {e}")

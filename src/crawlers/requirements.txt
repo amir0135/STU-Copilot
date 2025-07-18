@@ -3,3 +3,4 @@ aiohttp
 azure-storage-blob
 backoff
 openai
+feedparser
