@@ -1,8 +1,8 @@
 import os
-import json
-import logging
 from openai import AzureOpenAI
 from openai.types import CreateEmbeddingResponse
+import json
+import logging
 
 # Configure logging
 logging.basicConfig(level=logging.WARNING)
@@ -29,7 +29,7 @@ class FoundryService:
             api_version=self.api_version,
             api_key=self.api_key
         )
-
+        
         self.chat_client = AzureOpenAI(
             azure_endpoint=self.endpoint,
             azure_deployment=self.chat_model,
@@ -41,7 +41,7 @@ class FoundryService:
         """Get the embedding for a given text."""
         if not text:
             return []
-        
+
         response: CreateEmbeddingResponse = self.embedding_client.embeddings.create(
             input=text,
             model=self.embedding_model,
@@ -52,10 +52,10 @@ class FoundryService:
 
     def summarize_and_generate_keywords(self, text: str) -> tuple:
         """Summarize the given text using a GPT model and extract keywords.
-        
+
         Args:
             text (str): The text to summarize and extract keywords from
-            
+
         Returns:
             tuple: (summary, keywords) where summary is the summarized text and 
                   keywords is a comma-separated string of keywords
@@ -95,21 +95,21 @@ class FoundryService:
                 max_tokens=4096,
                 timeout=30  # Add timeout for better reliability
             )
-            
+
             # Extract content from response
             content = response.choices[0].message.content if response.choices else ''
-            
+
             # Default values in case parsing fails
             summary = content
             keywords = ""
-            
+
             # Try to parse as JSON if content looks like JSON
             if content and content.strip():
                 # Strip any potential non-JSON leading/trailing characters
                 content_stripped = content.strip()
                 json_start = content_stripped.find('{')
                 json_end = content_stripped.rfind('}')
-                
+
                 if json_start >= 0 and json_end > json_start:
                     try:
                         json_content = content_stripped[json_start:json_end+1]
@@ -117,20 +117,21 @@ class FoundryService:
                         summary = data.get("summary", "")
                         keywords = data.get("keywords", "")
                         if not summary and not keywords:
-                            logger.warning("JSON parsed but missing expected fields")
+                            logger.warning(
+                                "JSON parsed but missing expected fields")
                     except json.JSONDecodeError as e:
-                        logger.warning(f"Failed to parse model response as JSON: {e}")
+                        logger.warning(
+                            f"Failed to parse model response as JSON: {e}")
                 else:
-                    logger.warning("Model response does not contain valid JSON structure")
+                    logger.warning(
+                        "Model response does not contain valid JSON structure")
             elif not content:
                 logger.warning("Model response is empty.")
             else:
                 logger.warning("Model response is not in expected JSON format")
-                
+
             return summary, keywords
-            
+
         except Exception as e:
             logger.error(f"Error during text summarization: {e}")
             return ("", "")
-
-

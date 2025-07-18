@@ -3,6 +3,7 @@ from typing import Any
 import os
 import logging
 
+# Configure logging
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 

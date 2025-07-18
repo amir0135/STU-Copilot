@@ -1,11 +1,12 @@
 import os
 from azure.cosmos import CosmosClient, PartitionKey, exceptions, ContainerProxy, CosmosDict
-from azure.core.paging import ItemPaged
-from typing import Dict, Any
+from .foundry_service import FoundryService
+
+# Initialize the FoundryService for embedding generation
+foundry_service = FoundryService()
 
 
 class CosmosDBService:
-
     def __init__(self):
         endpoint = os.environ.get('COSMOSDB_ENDPOINT')
         key = os.environ.get('COSMOSDB_KEY')
@@ -50,10 +51,43 @@ class CosmosDBService:
         except exceptions.CosmosResourceNotFoundError:
             return False
 
-    def query_items(self, query: str, container_name: str, parameters: list = None) -> ItemPaged[Dict[str, Any]]:
+    def query_items(self, query: str, container_name: str, parameters: list = None) -> list:
         container = self.get_container(container_name)
         return list(container.query_items(
             query=query,
             parameters=parameters or [],
             enable_cross_partition_query=True
         ))
+
+    def hybrid_search(self, search_terms: str, container_name: str, top_count: int = 5) -> list:
+        """
+        Perform a hybrid search using full-text search and vector search.
+        This is a placeholder for the actual implementation.
+        """
+
+        # Generate the embedding for the search terms
+        search_embedding = foundry_service.generate_embedding(search_terms)
+        # Split search terms to a quoted, comma-separated string for full-text search
+        full_text = ', '.join(f'"{word}"' for word in search_terms.split())
+
+        hybrid_query = f"""
+            SELECT TOP {top_count} c.name, c.url, c.description, c.starts_count, c.archived, c.updated_at, 
+            VectorDistance(c.embedding, {search_embedding}) AS similarity_score
+            FROM c
+            ORDER BY RANK RRF(VectorDistance(c.embedding, {search_embedding}), FullTextScore(c.name, '@full_text'))           
+        """
+
+        container = self.get_container(container_name)
+
+        response = container.query_items(
+            query=hybrid_query,
+            parameters=[
+                {
+                    "name": "@full_text",
+                    "value": full_text
+                }
+            ],
+            enable_cross_partition_query=True,
+            populate_query_metrics=True)
+
+        return list(response)

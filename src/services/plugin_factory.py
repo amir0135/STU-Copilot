@@ -1,0 +1,50 @@
+from semantic_kernel.functions import kernel_function
+from semantic_kernel.connectors.mcp import MCPStreamableHttpPlugin
+import chainlit as cl
+from .cosmos_db_service import CosmosDBService
+import random
+import logging
+
+# Basic logging configuration
+logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger(__name__)
+
+# Initialize CosmosDBService
+cosmos_db_service = CosmosDBService()
+
+# Initialize the MCP plugin for Microsoft documentation search
+ms_docs_plugin = MCPStreamableHttpPlugin(
+    name="Microsoft Documentation Search",
+    url="https://learn.microsoft.com/api/mcp",
+    timeout=30
+)
+
+
+class PluginFactory:
+    """A plugin to ask questions and get answers."""
+
+    def __init__(self) -> None:
+        pass
+
+    @kernel_function(name="github_tool", description="Get relevant GitHub repositories for a given topic.")
+    @cl.step(type="tool", name="GitHub Repository Search")
+    async def github_tool(input: str) -> list:
+        """Get relevant GitHub repositories for a given topic."""
+        results = cosmos_db_service.hybrid_search(
+            search_terms=input, container_name="github-repos", top_count=5)
+        return results
+
+    @kernel_function(name="microsoft_docs_tool", description="Get relevant Microsoft documentation for a given topic.")
+    @cl.step(type="tool", name="Microsoft Documentation Search")
+    async def microsoft_docs_tool(input: str) -> str:
+        """Get relevant Microsoft documentation for a given topic."""
+        await ms_docs_plugin.connect()
+        result = await ms_docs_plugin.call_tool("microsoft_docs_search", question=input)
+        await ms_docs_plugin.close()
+        return result
+
+    @kernel_function(name="price_generator_tool", description="Generate random prices")
+    @cl.step(type="tool", name="Random Price Generator")
+    async def price_generator_tool(input: str) -> str:
+        """Generate random prices."""
+        return f"Random price for {input}: ${round(random.uniform(10, 100), 2)}"

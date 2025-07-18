@@ -1,5 +1,5 @@
 from cosmos_db_service import CosmosDBService
-from foundry_service import FoundryService
+from services.foundry_service import FoundryService
 import logging
 from dotenv import load_dotenv
 import json
@@ -18,8 +18,10 @@ search_terms = "ios app"
 # search_embedding = foundry_service.generate_embedding(search_terms)
 # print(search_embedding)
 
-results = db_service.hybrid_search(search_terms=search_terms, container_name="github-repos")
+results = db_service.hybrid_search(search_terms=search_terms, container_name="github-repos", top_count=1)
 
 #Show result items
-for item in list(results):
-    print(json.dumps(item, indent=2))
+# for item in list(results):
+#     print(json.dumps(item, indent=2))
+
+print(results)

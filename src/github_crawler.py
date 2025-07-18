@@ -3,9 +3,9 @@ import logging
 import asyncio
 import aiohttp
 from typing import List
-from data_models import RepositoryInfo
-from cosmos_db_service import CosmosDBService
-from foundry_service import FoundryService
+from services.data_models import RepositoryInfo
+from services.cosmos_db_service import CosmosDBService
+from services.foundry_service import FoundryService
 
 # Load environment variables from .env file
 load_dotenv(override=True)

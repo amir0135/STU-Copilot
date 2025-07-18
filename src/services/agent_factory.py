@@ -6,7 +6,8 @@ from semantic_kernel.connectors.ai.open_ai import (
     AzureChatCompletion,
     OpenAIChatPromptExecutionSettings,
 )
-from prompt_cache import load_prompt
+from .cache_service import load_prompt
+from .plugin_factory import PluginFactory
 
 
 class AgentFactory:
@@ -18,6 +19,7 @@ class AgentFactory:
         if not endpoint or not api_key:
             raise EnvironmentError(
                 "Missing Azure Open AI endpoint or API key.")
+        self.plugin_factory = PluginFactory()
 
     def create_kernel(self,
                       agent_name: str,
@@ -38,7 +40,6 @@ class AgentFactory:
         """Create an orchestrator agent with the necessary plugins."""
         agent_name = "orchestrator_agent"
         model_name = "gpt-4.1"
-        
 
         # Create a new kernel instance with the OpenAI service
         kernel = self.create_kernel(
@@ -52,15 +53,10 @@ class AgentFactory:
             name=agent_name,
             instructions=load_prompt(agent_name),
             plugins=[
-                # self.get_questioner_agent(),  # Add the questioner agent as a plugin
+                self.get_github_agent(),
+                self.plugin_factory.microsoft_docs_tool
             ]
         )
-
-        # Add plugins to the agent
-        # orchestrator_agent.kernel.add_plugin(
-        #     kernel.get_plugin("tools"),
-        #     plugin_name="tools"
-        # )
 
         return orchestrator_agent
 
@@ -104,6 +100,56 @@ class AgentFactory:
 
         return planner_agent
 
+    def get_github_agent(self) -> ChatCompletionAgent:
+        """Create a GitHub agent with the necessary plugins."""
+        agent_name = "github_agent"
+        model_name = "gpt-4.1-nano"
+
+        # Clone the base kernel and add the OpenAI service
+        kernel = self.create_kernel(
+            agent_name=agent_name,
+            model_name=model_name
+        )
+
+        # Create the agent
+        github_agent = ChatCompletionAgent(
+            kernel=kernel,
+            name=agent_name,
+            instructions=load_prompt(agent_name),
+            plugins=[
+                self.plugin_factory.github_tool            
+            ]
+        )
+
+        return github_agent
+    
+    def get_microsoft_docs_agent(self) -> ChatCompletionAgent:
+        """Create a Microsoft Docs agent with the necessary plugins."""
+        agent_name = "microsoft_docs_agent"
+        model_name = "gpt-4.1-mini"
+
+        # Clone the base kernel and add the OpenAI service
+        kernel = self.create_kernel(
+            agent_name=agent_name,
+            model_name=model_name
+        )
+        kernel.add_plugins([
+            self.plugin_factory.microsoft_docs_tool,
+            #elf.plugin_factory.price_generator_tool
+        ])
+        
+        # Create the agent
+        microsoft_docs_agent = ChatCompletionAgent(
+            kernel=kernel,
+            name=agent_name,
+            instructions="""
+            Answer the user's question using all provided plugins.
+            Run plugins one by one and wait for the result before continuing.
+            """,
+        )
+
+        return microsoft_docs_agent
+
     # def create_agent(self,
     #                  kernel: Kernel,
     #                  agent_name: str,
@@ -125,7 +171,7 @@ class AgentFactory:
     #     )
 
     @staticmethod
-    def request_settings() -> OpenAIChatPromptExecutionSettings:
+    def execution_settings() -> OpenAIChatPromptExecutionSettings:
         """Create request settings for the OpenAI service."""
         return OpenAIChatPromptExecutionSettings(
             function_choice_behavior=FunctionChoiceBehavior.Auto(
