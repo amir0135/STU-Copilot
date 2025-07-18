@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 import json
 from github_crawler import GitHubCrawler
 import asyncio
+from blogs_crawler import BlogsCrawler
+from cosmos_db_service import CosmosDBService
+from foundry_service import FoundryService
 
 load_dotenv(override=True)
 
@@ -28,7 +31,17 @@ logger = logging.getLogger(__name__)
 
 # print(results)
 
-github_crawler = GitHubCrawler()
-logger.info("GitHubCrawler initialized successfully.")
-github_crawler.run()
+# github_crawler = GitHubCrawler()
+# logger.info("GitHubCrawler initialized successfully.")
+# github_crawler.run()
 
+blogs_crawler = BlogsCrawler(
+    cosmos_db_service=CosmosDBService(),
+    foundry_service=FoundryService()
+)
+
+feeds = blogs_crawler.rss_feed_to_json(
+    feed_url="https://devblogs.microsoft.com/landing")
+
+# for feed in feeds:
+#     logger.info(f"Processed blog item: {feed}")

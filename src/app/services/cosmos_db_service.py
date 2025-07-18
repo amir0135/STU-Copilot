@@ -6,9 +6,6 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv(override=True)
 
-# Initialize the FoundryService for embedding generation
-
-
 
 class CosmosDBService:
     def __init__(self):
@@ -56,6 +53,14 @@ class CosmosDBService:
         except exceptions.CosmosResourceNotFoundError:
             return False
 
+    def check_item_exists(self, item_id: str, container_name: str) -> bool:
+        container = self.get_container(container_name=container_name)
+        try:
+            container.read_item(item=item_id, partition_key=item_id)
+            return True
+        except exceptions.CosmosResourceNotFoundError:
+            return False
+
     def query_items(self, query: str, container_name: str, parameters: list = None) -> list:
         container = self.get_container(container_name)
         return list(container.query_items(
@@ -64,19 +69,23 @@ class CosmosDBService:
             enable_cross_partition_query=True
         ))
 
-    def hybrid_search(self, search_terms: str, container_name: str, top_count: int = 5) -> list:
+    def hybrid_search(self, search_terms: str,
+                      container_name: str,
+                      fields: list[str],
+                      top_count: int = 5) -> list:
         """
         Perform a hybrid search using full-text search and vector search.
         This is a placeholder for the actual implementation.
         """
 
         # Generate the embedding for the search terms
-        search_embedding = self.foundry_service.generate_embedding(search_terms)
+        search_embedding = self.foundry_service.generate_embedding(
+            search_terms)
         # Split search terms to a quoted, comma-separated string for full-text search
         full_text = ', '.join(f'"{word}"' for word in search_terms.split())
-
+        query_fields = f"c.{', c.'.join(fields)}"
         hybrid_query = f"""
-            SELECT TOP {top_count} c.name, c.url, c.description, c.starts_count, c.archived, c.updated_at, 
+            SELECT TOP {top_count} {query_fields}, 
             VectorDistance(c.embedding, {search_embedding}) AS similarity_score
             FROM c
             ORDER BY RANK RRF(VectorDistance(c.embedding, {search_embedding}), FullTextScore(c.name, '@full_text'))           

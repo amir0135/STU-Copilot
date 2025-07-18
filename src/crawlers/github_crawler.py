@@ -1,16 +1,12 @@
-import os
+
 import logging
 import time
 import requests
-from typing import List, Dict, Optional
-from azure.cosmos import CosmosClient, ContainerProxy, CosmosDict
-from openai import AzureOpenAI
-from openai.types import CreateEmbeddingResponse
-import json
-from dotenv import load_dotenv
+from typing import List
+from data_models import RepositoryInfo
+from cosmos_db_service import CosmosDBService
+from foundry_service import FoundryService
 
-# Load environment variables from .env file
-load_dotenv(override=True)
 
 # Configure logging
 logging.getLogger().setLevel(logging.INFO)
@@ -31,213 +27,15 @@ github_organizations = [
 cosmosdb_container_name = "github-repos"
 
 
-class RepositoryInfo:
-    """Data class to hold repository information"""
-
-    def __init__(self, id: str, organization: str, name: str, url: str,
-                 updated_at: str, stars_count: int, archived: bool,
-                 description: Optional[str] = None, keywords: Optional[str] = None,
-                 embedding: Optional[float] = None):
-        self.id = id  # Unique identifier for the repository
-        self.organization = organization
-        self.name = name
-        self.url = url
-        self.description = description
-        self.keywords = keywords
-        self.updated_at = updated_at
-        self.stars_count = stars_count
-        self.archived = archived
-        self.embedding = embedding
-
-    def to_dict(self) -> Dict:
-        """Convert the repository info to a dictionary for saving to CosmosDB"""
-        return {
-            "id": self.id,
-            "organization": self.organization,
-            "name": self.name,
-            "url": self.url,
-            "description": self.description,
-            "keywords": self.keywords,
-            "updated_at": self.updated_at,
-            "stars_count": self.stars_count,
-            "archived": self.archived,
-            "embedding": self.embedding
-        }
-
-    @staticmethod
-    def from_dict(data: Dict) -> 'RepositoryInfo':
-        """Create a RepositoryInfo instance from a dictionary"""
-        return RepositoryInfo(
-            id=data.get("id"),
-            organization=data.get("organization"),
-            name=data.get("name"),
-            url=data.get("url"),
-            description=data.get("description"),
-            keywords=data.get("keywords"),
-            updated_at=data.get("updated_at"),
-            stars_count=data.get("stars_count", 0),
-            archived=data.get("archived", False),
-            embedding=data.get("embedding")
-        )
-
-
-class CosmosDBService:
-    """Service to interact with Azure CosmosDB"""
-
-    def __init__(self, ):
-
-        endpoint = os.environ.get('COSMOSDB_ENDPOINT')
-        key = os.environ.get('COSMOSDB_KEY')
-        database_name = os.environ.get('COSMOSDB_DATABASE')
-        if not endpoint or not key or not database_name:
-            raise EnvironmentError(
-                "CosmosDB credentials are not set in environment variables.")
-        self.client = CosmosClient(endpoint, key)
-        self.database = self.client.get_database_client(database_name)
-
-    def get_container(self, container_name: str) -> ContainerProxy:
-        return self.database.get_container_client(container_name)
-
-    def upsert_item(self, item: dict) -> CosmosDict:
-        container = self.get_container(cosmosdb_container_name)
-        return container.upsert_item(body=item)
-
-
-class FoundryService:
-    """Service to handle text embeddings using Azure OpenAI."""
-
-    def __init__(self):
-        self.endpoint = os.environ.get('AZURE_OPENAI_ENDPOINT')
-        self.api_key = os.environ.get('AI_FOUNDRY_KEY')
-        self.embedding_model = "text-embedding-3-small"
-        self.chat_model = "gpt-4.1-nano"
-        self.api_version = "2024-12-01-preview"
-
-        if not self.endpoint or not self.api_key:
-            raise EnvironmentError(
-                "Azure OpenAI credentials are not set in environment variables.")
-
-        self.embedding_client = AzureOpenAI(
-            azure_endpoint=self.endpoint,
-            azure_deployment=self.embedding_model,
-            api_version=self.api_version,
-            api_key=self.api_key
-        )
-
-        self.chat_client = AzureOpenAI(
-            azure_endpoint=self.endpoint,
-            azure_deployment=self.chat_model,
-            api_version=self.api_version,
-            api_key=self.api_key
-        )
-
-    def generate_embedding(self, text: str) -> list:
-        """Get the embedding for a given text."""
-        if not text:
-            return []
-
-        response: CreateEmbeddingResponse = self.embedding_client.embeddings.create(
-            input=text,
-            model=self.embedding_model,
-            encoding_format="float",
-            dimensions=1536,
-        )
-        return response.data[0].embedding if response.data else []
-
-    def summarize_and_generate_keywords(self, text: str) -> tuple:
-        """Summarize the given text using a GPT model and extract keywords.
-
-        Args:
-            text (str): The text to summarize and extract keywords from
-
-        Returns:
-            tuple: (summary, keywords) where summary is the summarized text and 
-                  keywords is a comma-separated string of keywords
-        """
-        if not text:
-            return ("", "")
-
-        try:
-            response = self.chat_client.chat.completions.create(
-                model=self.chat_model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": """
-                            Your task is to process the following text in two steps:
-                            
-                            1. Summarize the text into less than 2000 characters, keeping words as similar as possible to the original text.
-                               - Remove code blocks, markdown formatting, and unnecessary whitespace
-                               - Do not include explanations or comments
-                            
-                            2. Extract exactly 5 keywords that best represent the main topics from the content.
-                            
-                            IMPORTANT: You must respond ONLY with a valid JSON object using this exact format:
-                            {
-                                "summary": "<your summarized text>",
-                                "keywords": "<five keywords separated by commas>"
-                            }
-                            
-                            Do not include any text before or after the JSON object. No markdown formatting, no code blocks, no explanations.
-                        """
-                    },
-                    {
-                        "role": "user",
-                        "content": text
-                    }
-                ],
-                max_tokens=4096,
-                timeout=30  # Add timeout for better reliability
-            )
-
-            # Extract content from response
-            content = response.choices[0].message.content if response.choices else ''
-
-            # Default values in case parsing fails
-            summary = content
-            keywords = ""
-
-            # Try to parse as JSON if content looks like JSON
-            if content and content.strip():
-                # Strip any potential non-JSON leading/trailing characters
-                content_stripped = content.strip()
-                json_start = content_stripped.find('{')
-                json_end = content_stripped.rfind('}')
-
-                if json_start >= 0 and json_end > json_start:
-                    try:
-                        json_content = content_stripped[json_start:json_end+1]
-                        data = json.loads(json_content)
-                        summary = data.get("summary", "")
-                        keywords = data.get("keywords", "")
-                        if not summary and not keywords:
-                            logger.warning(
-                                "JSON parsed but missing expected fields")
-                    except json.JSONDecodeError as e:
-                        logger.warning(
-                            f"Failed to parse model response as JSON: {e}")
-                else:
-                    logger.warning(
-                        "Model response does not contain valid JSON structure")
-            elif not content:
-                logger.warning("Model response is empty.")
-            else:
-                logger.warning("Model response is not in expected JSON format")
-
-            return summary, keywords
-
-        except Exception as e:
-            logger.error(f"Error during text summarization: {e}")
-            return ("", "")
-
-
 class GitHubCrawler:
     """GitHub Crawler to fetch repositories and their README files."""
 
-    def __init__(self):
+    def __init__(self,
+                 cosmos_db_service: CosmosDBService,
+                 foundry_service: FoundryService):
         """Initialize the GitHub Crawler."""
-        self.cosmos_db_service = CosmosDBService()
-        self.foundry_service = FoundryService()
+        self.cosmos_db_service = cosmos_db_service
+        self.foundry_service = foundry_service
 
     def fetch_org_repositories(self, organization: str) -> List[RepositoryInfo]:
         """Fetch repositories for a given organization from GitHub API in a paginated manner."""
@@ -359,17 +157,18 @@ class GitHubCrawler:
 
             # Generate description for the repository
             context = f"{repo.description}\n\n{readme_content}"
-            summary, keywords = self.foundry_service.summarize_and_generate_keywords(
+            summary, tags = self.foundry_service.summarize_and_generate_tags(
                 context)
             repo.description = summary
-            repo.keywords = keywords
+            repo.tags = tags
 
             # Generate embedding for the repository
             repo.embedding = self.foundry_service.generate_embedding(summary)
 
             # Save repository to CosmosDB
             self.cosmos_db_service.upsert_item(
-                item=repo.to_dict()
+                item=repo.to_dict(),
+                container_name=cosmosdb_container_name
             )
 
         except Exception as e:

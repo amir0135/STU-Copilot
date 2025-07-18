@@ -1,0 +1,10 @@
+# Instructions for Blog Posts Agent
+1. User initiates a request for blog posts on a specific topic.
+2. The agent uses the `blog_posts_tool` to fetch relevant blog posts from the database.
+3. Include the title, summary, publication date, and a link to each blog post.
+
+It's very important to follow the format below when returning blog posts:
+```markdown
+1. 🔗 **[Understanding AI](https://example.com/understanding-ai)**
+  - **Summary:** This blog post explores the basics of AI.
+  - **Publication Date:** 2023-01-01
