@@ -106,19 +106,19 @@ class SeismicContent:
         except Exception:
             return date_str
 
-    def __init__(self, id: str, name: str, url: str, version: str, versionCreatedDate: str, publishTime: str, createTime: str,
-                 expirationDate: str, description: str, size: str, format: str, Confidentiality: str, Sales_Stage: str,
-                 Audience: str, Competitor: str, Level: str, Language: str, Industry: str, Initiative: str, Segment: str,
-                 Content_Sub_Type: str, Industry_Sub_Vertical: str, Solution_Area: str, Content_Group: str, Products: str,
-                 Solution_Play: str, Industry_Vertical: str, embedding: Optional[float] = None):
+    def __init__(self, id: str, name: str, url: str, version: str, version_creation_date: str, publish_date: str, creation_date: str,
+                 expiration_date: str, description: str, size: str, format: str, confidentiality: str, sales_stage: str,
+                 audience: str, competitor: str, level: str, language: str, industry: str, initiative: str, segment: str,
+                 content_sub_type: str, industry_sub_vertical: str, solution_area: str, content_group: str, products: str,
+                 solution_play: str, industry_vertical: str, tags: Optional[str] = None, embedding: Optional[float] = None):
         self.id = id
         self.name = name
         self.url = url
         self.version = version
-        self.version_created_date = self._to_iso_date(versionCreatedDate)
-        self.publish_time = self._to_iso_date(publishTime)
-        self.create_time = self._to_iso_date(createTime)
-        self.expiration_date = self._to_iso_date(expirationDate)
+        self.version_creation_date = self._to_iso_date(version_creation_date)
+        self.publish_date = self._to_iso_date(publish_date)
+        self.creation_date = self._to_iso_date(creation_date)
+        self.expiration_date = self._to_iso_date(expiration_date)
         self.description = description
         self.size = size
         self.format = format
@@ -129,15 +129,16 @@ class SeismicContent:
         self.level = level
         self.language = language
         self.industry = industry
-        self.initiative = Initiative
-        self.segment = Segment
-        self.content_sub_type = Content_Sub_Type
-        self.industry_sub_vertical = Industry_Sub_Vertical
-        self.solution_area = Solution_Area
-        self.content_group = Content_Group
-        self.products = Products
-        self.solution_play = Solution_Play
-        self.industry_vertical = Industry_Vertical
+        self.initiative = initiative
+        self.segment = segment
+        self.content_sub_type = content_sub_type
+        self.industry_sub_vertical = industry_sub_vertical
+        self.solution_area = solution_area
+        self.content_group = content_group
+        self.products = products
+        self.solution_play = solution_play
+        self.industry_vertical = industry_vertical
+        self.tags = tags
         self.embedding = embedding
 
     def to_dict(self) -> Dict:
@@ -147,29 +148,30 @@ class SeismicContent:
             "name": self.name,
             "url": self.url,
             "version": self.version,
-            "versionCreatedDate": self.versionCreatedDate,
-            "publishTime": self.publishTime,
-            "createTime": self.createTime,
-            "expirationDate": self.expirationDate,
+            "version_creation_date": self.version_creation_date,
+            "publish_date": self.publish_date,
+            "creation_date": self.creation_date,
+            "expiration_date": self.expiration_date,
             "description": self.description,
             "size": self.size,
             "format": self.format,
-            "Confidentiality": self.Confidentiality,
-            "Sales Stage": self.Sales_Stage,
-            "Audience": self.Audience,
-            "Competitor": self.Competitor,
-            "Level": self.Level,
-            "Language": self.Language,
-            "Industry": self.Industry,
-            "Initiative": self.Initiative,
-            "Segment": self.Segment,
-            "Content Sub-Type": self.Content_Sub_Type,
-            "Industry Sub-Vertical": self.Industry_Sub_Vertical,
-            "Solution Area": self.Solution_Area,
-            "Content Group": self.Content_Group,
-            "Products": self.Products,
-            "Solution Play": self.Solution_Play,
-            "Industry Vertical": self.Industry_Vertical,
+            "confidentiality": self.confidentiality,
+            "sales_stage": self.sales_stage,
+            "audience": self.audience,
+            "competitor": self.competitor,
+            "level": self.level,
+            "language": self.language,
+            "industry": self.industry,
+            "initiative": self.initiative,
+            "segment": self.segment,
+            "content_sub_type": self.content_sub_type,
+            "industry_sub_vertical": self.industry_sub_vertical,
+            "solution_area": self.solution_area,
+            "content_group": self.content_group,
+            "products": self.products,
+            "solution_play": self.solution_play,
+            "industry_vertical": self.industry_vertical,
+            "tags": self.tags,
             "embedding": self.embedding
         }
 
@@ -181,30 +183,32 @@ class SeismicContent:
             name=data.get("name"),
             url=data.get("url"),
             version=data.get("version"),
-            versionCreatedDate=SeismicContent._to_iso_date(
-                data.get("versionCreatedDate")),
-            publishTime=SeismicContent._to_iso_date(data.get("publishTime")),
-            createTime=SeismicContent._to_iso_date(data.get("createTime")),
-            expirationDate=SeismicContent._to_iso_date(
-                data.get("expirationDate")),
+            version_creation_date=SeismicContent._to_iso_date(
+                data.get("version_creation_date")),
+            publish_date=SeismicContent._to_iso_date(data.get("publish_date")),
+            creation_date=SeismicContent._to_iso_date(
+                data.get("creation_date")),
+            expiration_date=SeismicContent._to_iso_date(
+                data.get("expiration_date")),
             description=data.get("description"),
             size=data.get("size"),
             format=data.get("format"),
-            Confidentiality=data.get("Confidentiality"),
-            Sales_Stage=data.get("Sales Stage", "--"),
-            Audience=data.get("Audience"),
-            Competitor=data.get("Competitor", "--"),
-            Level=data.get("Level"),
-            Language=data.get("Language"),
-            Industry=data.get("Industry", "--"),
-            Initiative=data.get("Initiative", "--"),
-            Segment=data.get("Segment"),
-            Content_Sub_Type=data.get("Content Sub-Type"),
-            Industry_Sub_Vertical=data.get("Industry Sub-Vertical", "--"),
-            Solution_Area=data.get("Solution Area"),
-            Content_Group=data.get("Content Group"),
-            Products=data.get("Products", "--"),
-            Solution_Play=data.get("Solution Play", "--"),
-            Industry_Vertical=data.get("Industry Vertical", "--"),
+            confidentiality=data.get("confidentiality"),
+            sales_stage=data.get("sales_stage", "--"),
+            audience=data.get("audience"),
+            competitor=data.get("competitor", "--"),
+            level=data.get("level"),
+            language=data.get("language"),
+            industry=data.get("industry", "--"),
+            initiative=data.get("initiative", "--"),
+            segment=data.get("segment"),
+            content_sub_type=data.get("content_sub_type"),
+            industry_sub_vertical=data.get("industry_sub_vertical", "--"),
+            solution_area=data.get("solution_area"),
+            content_group=data.get("content_group"),
+            products=data.get("products", "--"),
+            solution_play=data.get("solution_play", "--"),
+            industry_vertical=data.get("industry_vertical", "--"),
+            tags=data.get("tags"),
             embedding=data.get("embedding")
         )

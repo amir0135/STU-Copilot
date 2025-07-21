@@ -31,9 +31,10 @@ class PluginFactory:
     async def github_tool(input: str) -> list:
         """Get relevant GitHub repositories for a given topic."""
         results = cosmos_db_service.hybrid_search(
-            search_terms=input, 
-            container_name="github-repos", 
-            fields=["name", "url", "description", "stars_count", "archived", "updated_at"],
+            search_terms=input,
+            container_name="github-repos",
+            fields=["name", "url", "description",
+                    "stars_count", "archived", "updated_at"],
             top_count=5)
         return results
 
@@ -45,14 +46,14 @@ class PluginFactory:
         result = await ms_docs_plugin.call_tool("microsoft_docs_search", question=input)
         await ms_docs_plugin.close()
         return result
-    
+
     @kernel_function(name="blog_posts_tool", description="Get relevant blog posts for a given topic.")
     @cl.step(type="tool", name="Blog Posts Search")
     async def blog_posts_tool(input: str) -> list:
         """Get relevant blog posts for a given topic."""
         results = cosmos_db_service.hybrid_search(
-            search_terms=input, 
-            container_name="blog-posts", 
+            search_terms=input,
+            container_name="blog-posts",
             fields=["title", "description", "published_date", "url"],
             top_count=5)
         return results
@@ -63,13 +64,14 @@ class PluginFactory:
         """Generate random prices."""
         return f"Random price for {input}: ${round(random.uniform(10, 100), 2)}"
 
-    @kernel_function(name="seismic_data_tool", description="Get seismic data for a given location.")
+    @kernel_function(name="seismic_tool", description="Get seismic data for a given location.")
     @cl.step(type="tool", name="Seismic Data Search")
-    async def seismic_data_tool(input: str) -> list:
+    async def seismic_tool(input: str) -> list:
         """Get seismic data for a given location."""
         results = cosmos_db_service.hybrid_search(
             search_terms=input,
-            container_name="seismic-data",
-            fields=["name", "link", "description", "publish_date", "solution_area", "audience", "format", "size", "confidentiality"],
-            top_count=5)
+            container_name="seismic-contents",
+            fields=["name", "url", "description", "publish_date", "level",
+                    "solution_area", "audience", "format", "size", "confidentiality"],
+            top_count=10)
         return results

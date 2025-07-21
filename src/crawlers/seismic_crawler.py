@@ -1,4 +1,3 @@
-from glob import glob
 import hashlib
 import os
 import json
@@ -63,11 +62,17 @@ class SeismicCrawler:
                         f"Seismic content '{item.name}' already exists in CosmosDB.")
                     continue
 
+                logger.info(f"Processing Seismic content: {item.name}")
+                
                 # Generate embedding for the seismic content
                 embedding_content = item.name
                 item.embedding = self.foundry_service.generate_embedding(
                     embedding_content)
 
+                # Add tags to the seismic content
+                if item.products and item.products != "--":
+                    item.tags = item.products
+                
                 # Save the processed seismic content to CosmosDB
                 self.cosmos_db_service.upsert_item(
                     item=item.to_dict(),
@@ -98,7 +103,8 @@ class SeismicCrawler:
             # Process the fetched seismic data
             self.process_data(seismic_data)
 
-            logger.info(f"Seismic Crawler finished processing {len(seismic_data)} items.")
+            logger.info(
+                f"Seismic Crawler finished processing {len(seismic_data)} items.")
 
         except Exception as e:
             logger.error(f"An error occurred processing seismic data: {e}")
