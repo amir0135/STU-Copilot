@@ -202,3 +202,6 @@ dist
 __blobstorage__
 __queuestorage__
 __azurite_db*__.json
+
+# Temporary folder
+.temp

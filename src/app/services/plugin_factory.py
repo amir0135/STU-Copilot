@@ -62,3 +62,14 @@ class PluginFactory:
     async def price_generator_tool(input: str) -> str:
         """Generate random prices."""
         return f"Random price for {input}: ${round(random.uniform(10, 100), 2)}"
+
+    @kernel_function(name="seismic_data_tool", description="Get seismic data for a given location.")
+    @cl.step(type="tool", name="Seismic Data Search")
+    async def seismic_data_tool(input: str) -> list:
+        """Get seismic data for a given location."""
+        results = cosmos_db_service.hybrid_search(
+            search_terms=input,
+            container_name="seismic-data",
+            fields=["name", "link", "description", "publish_date", "solution_area", "audience", "format", "size", "confidentiality"],
+            top_count=5)
+        return results

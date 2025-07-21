@@ -6,7 +6,7 @@ import feedparser
 from data_models import BlogItem
 from cosmos_db_service import CosmosDBService
 from foundry_service import FoundryService
-from datetime import datetime
+
 
 # Configure logging
 logging.getLogger().setLevel(logging.INFO)
@@ -16,10 +16,11 @@ logger = logging.getLogger("azure.functions")
 cosmosdb_container_name = "blog-posts"
 
 # Blog feed URLs
-blog_feed_urls = [    
-    "https://devblogs.microsoft.com/landing", # Microsoft Developer Blogs
-    "https://news.microsoft.com/source/feed/", # Microsoft News
-    "https://techcommunity.microsoft.com/t5/s/gxcuf89792/rss/Community?interaction.style=blog&feeds.replies=false" # Microsoft Tech Community Blogs
+blog_feed_urls = [
+    "https://devblogs.microsoft.com/landing",  # Microsoft Developer Blogs
+    "https://news.microsoft.com/source/feed/",  # Microsoft News
+    # Microsoft Tech Community Blogs
+    "https://techcommunity.microsoft.com/t5/s/gxcuf89792/rss/Community?interaction.style=blog&feeds.replies=false"
 ]
 
 
