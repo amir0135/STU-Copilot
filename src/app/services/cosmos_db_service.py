@@ -72,6 +72,7 @@ class CosmosDBService:
     def hybrid_search(self, search_terms: str,
                       container_name: str,
                       fields: list[str],
+                      full_text_search_field: str = 'name',
                       top_count: int = 5) -> list:
         """
         Perform a hybrid search using full-text search and vector search.
@@ -88,7 +89,7 @@ class CosmosDBService:
             SELECT TOP {top_count} {query_fields}, 
             VectorDistance(c.embedding, {search_embedding}) AS similarity_score
             FROM c
-            ORDER BY RANK RRF(VectorDistance(c.embedding, {search_embedding}), FullTextScore(c.name, '@full_text'))           
+            ORDER BY RANK RRF(VectorDistance(c.embedding, {search_embedding}), FullTextScore(c.{full_text_search_field}, '@full_text'))
         """
 
         container = self.get_container(container_name)

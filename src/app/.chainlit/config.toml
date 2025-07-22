@@ -67,6 +67,7 @@ edit_message = true
 [UI]
 # Name of the assistant.
 name = "STU Copilot"
+custom_css = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
 
 # default_theme = "dark"
 

@@ -16,7 +16,8 @@ app = func.FunctionApp()
 cosmos_db_service = CosmosDBService()
 foundry_service = FoundryService()
 
-@app.timer_trigger(schedule="0 */5 * * * *",
+
+@app.timer_trigger(schedule="0 0 0 * * *",  # Run every 1 day
                    arg_name="timer_request",
                    run_on_startup=False,
                    use_monitor=False)
@@ -28,7 +29,8 @@ def github_crawler_func(timer_request: func.TimerRequest) -> None:
     github_crawler.run()
     logger.info('GitHub crawler function finished.')
 
-@app.timer_trigger(schedule="0 0 */5 * * *",  # Run every 6 hours
+
+@app.timer_trigger(schedule="0 0 0 * * *",  # Run every 1 day
                    arg_name="timer_request",
                    run_on_startup=True,
                    use_monitor=False)
@@ -36,6 +38,19 @@ def blogs_crawler_func(timer_request: func.TimerRequest) -> None:
     logger.info('Blogs crawler function started.')
     from blogs_crawler import BlogsCrawler
     blogs_crawler = BlogsCrawler(cosmos_db_service=cosmos_db_service,
-                                foundry_service=foundry_service)
+                                 foundry_service=foundry_service)
     blogs_crawler.run()
     logger.info('Blogs crawler function finished.')
+
+
+@app.timer_trigger(schedule="0 0 0 1 1 *",  # Run every year on January 1st
+                   arg_name="timer_request",
+                   run_on_startup=False,
+                   use_monitor=False)
+def seismic_crawler_func(timer_request: func.TimerRequest) -> None:
+    logger.info('Seismic crawler function started.')
+    from seismic_crawler import SeismicCrawler
+    seismic_crawler = SeismicCrawler(cosmos_db_service=cosmos_db_service,
+                                     foundry_service=foundry_service)
+    seismic_crawler.run()
+    logger.info('Seismic crawler function finished.')

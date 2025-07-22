@@ -8,6 +8,7 @@ import asyncio
 from blogs_crawler import BlogsCrawler
 from cosmos_db_service import CosmosDBService
 from foundry_service import FoundryService
+from seismic_crawler import SeismicCrawler
 
 load_dotenv(override=True)
 
@@ -35,13 +36,20 @@ logger = logging.getLogger(__name__)
 # logger.info("GitHubCrawler initialized successfully.")
 # github_crawler.run()
 
-blogs_crawler = BlogsCrawler(
+# blogs_crawler = BlogsCrawler(
+#     cosmos_db_service=CosmosDBService(),
+#     foundry_service=FoundryService()
+# )
+
+# feeds = blogs_crawler.rss_feed_to_json(
+#     feed_url="https://devblogs.microsoft.com/landing")
+
+# # for feed in feeds:
+# #     logger.info(f"Processed blog item: {feed}")
+
+seismic_crawler = SeismicCrawler(
     cosmos_db_service=CosmosDBService(),
     foundry_service=FoundryService()
 )
 
-feeds = blogs_crawler.rss_feed_to_json(
-    feed_url="https://devblogs.microsoft.com/landing")
-
-# for feed in feeds:
-#     logger.info(f"Processed blog item: {feed}")
+seismic_crawler.run()

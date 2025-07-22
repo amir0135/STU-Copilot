@@ -168,6 +168,29 @@ class AgentFactory:
         )
 
         return blog_posts_agent
+    
+    def get_seismic_agent(self) -> ChatCompletionAgent:
+        """Create a Seismic agent with the necessary plugins."""
+        agent_name = "seismic_agent"
+        model_name = "gpt-4.1-nano"
+
+        # Clone the base kernel and add the OpenAI service
+        kernel = self.create_kernel(
+            agent_name=agent_name,
+            model_name=model_name
+        )
+
+        # Create the agent
+        seismic_agent = ChatCompletionAgent(
+            kernel=kernel,
+            name=agent_name,
+            instructions=load_prompt(agent_name),
+            plugins=[
+                self.plugin_factory.seismic_tool
+            ]
+        )
+
+        return seismic_agent
 
     # def create_agent(self,
     #                  kernel: Kernel,
