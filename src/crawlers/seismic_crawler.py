@@ -16,7 +16,7 @@ logger = logging.getLogger("azure.functions")
 # Define the path to the seismic data source
 # This should point to the processed seismic data file
 data_source = str(Path(__file__).resolve()
-                  .parents[2] / '.temp' / 'seismic_processed_data.json')
+                  .parents[2] / '.temp' / 'L200-300-400-processed.json')
 
 
 class SeismicCrawler:
@@ -54,7 +54,7 @@ class SeismicCrawler:
         for item in seismic_data:
             try:
                 # Generate a unique ID for the seismic content
-                item.id = self.generate_item_id(item.url)
+                #item.id = self.generate_item_id(item.url)
 
                 # Check if the item already exists in CosmosDB
                 if self.cosmos_db_service.check_item_exists(item.id, "seismic-contents"):

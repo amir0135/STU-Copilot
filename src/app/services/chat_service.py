@@ -36,7 +36,7 @@ class ChatService:
     def get_welcome_message(self, user_first_name: str, user_job_title: Optional[str] = None) -> str:
         """Returns the welcome message to the user."""
 
-        welcome_message = f"<span class='fas fa-star'></span>  Hi **{user_first_name}**, welcome to the STU Copilot! "
+        welcome_message = f"👋 Hi **{user_first_name}**, welcome to the STU Copilot! "
 
         if user_job_title:
             welcome_message += f"I consider your role as a **{user_job_title}** while assisting you. "

@@ -202,6 +202,7 @@ dist
 __blobstorage__
 __queuestorage__
 __azurite_db*__.json
+AzuriteConfig
 
 # Temporary folder
 .temp

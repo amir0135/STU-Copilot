@@ -58,8 +58,8 @@ async def on_chat_start():
     # Show the welcome message to the user
     await cl.Message(content=welcome_message).send()
     
-    icon_element = cl.CustomElement(name="Icon")
-    await cl.Message(content="", elements=[icon_element]).send()
+    # icon_element = cl.CustomElement(name="Icon")
+    # await cl.Message(content="", elements=[icon_element]).send()
 
     chat_history.add_assistant_message(welcome_message)
 
@@ -79,7 +79,7 @@ async def on_message(user_message: cl.Message):
     chat_history: ChatHistory = cl.user_session.get("chat_history")
     chat_thread: ChatHistoryAgentThread = cl.user_session.get("chat_thread")
     loading_message: cl.Message = cl.user_session.get("loading_message")
-    responder_agent: ChatCompletionAgent = github_agent
+    responder_agent: ChatCompletionAgent = seismic_agent
 
     chat_history.add_user_message(user_message.content)
     answer = cl.Message(content="")
