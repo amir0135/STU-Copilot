@@ -5,7 +5,7 @@
 
 It's important to follow the format below when returning GitHub repositories:
 ```markdown
-1. <span class"fas fa-star"></span> **[https://github.com/user/repo](https://github.com/user/repo)**
+1. 🔗 **[https://github.com/user/repo](https://github.com/user/repo)**
   - **Description:** A brief description of the repository.
   - **Stars:** 123
   - **Archived:** No
