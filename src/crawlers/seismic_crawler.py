@@ -52,9 +52,7 @@ class SeismicCrawler:
         """Process the fetched seismic data."""
 
         for item in seismic_data:
-            try:
-                # Generate a unique ID for the seismic content
-                #item.id = self.generate_item_id(item.url)
+            try:                
 
                 # Check if the item already exists in CosmosDB
                 if self.cosmos_db_service.check_item_exists(item.id, "seismic-contents"):
@@ -81,12 +79,9 @@ class SeismicCrawler:
 
             except Exception as e:
                 logger.error(
-                    f"Error processing seismic content '{item.title}': {e}")
+                    f"Error processing seismic content '{item.name}': {e}")
 
-    def save_data(self, processed_data: List[SeismicContent]):
-        """Save the processed seismic data."""
-        for item in processed_data:
-            self.cosmos_db_service.save_item(item)
+    
 
     def run(self):
         """Run the Seismic Crawler."""
