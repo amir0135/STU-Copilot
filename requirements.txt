@@ -8,4 +8,4 @@ azure-functions
 aiohttp
 feedparser
 azure-ai-projects
-azure-identit
+azure-identity
