@@ -91,13 +91,13 @@ class PluginFactory:
 
     @kernel_function(name="bing_search_tool", description="Perform a Bing search using the Bing Search agent.")
     @cl.step(type="tool", name="Bing Search")
-    async def bing_search_tool(input: str) -> str:
+    async def bing_search_tool(input: str) -> list:
         """Get Bing search results for a given query."""
 
         async with get_ai_foundry_client() as client:
             agent_definition = await client.agents.get_agent(agent_id=bing_search_agent_id)
             agent = AzureAIAgent(client=client, definition=agent_definition)
-            response = await agent.get_response(messages=input)
+            response = await agent.get_response(messages=[input])
             return response.items
 
 
@@ -107,7 +107,7 @@ async def get_ai_foundry_client():
         DefaultAzureCredential() as creds,
         AzureAIAgent.create_client(
             credential=creds,
-            endpoint=os.getenv("AI_FOUNDRY_PROJECT_ENDPOINT"),
+            endpoint=ai_foundry_project_endpoint,
         ) as client
     ):
         yield client

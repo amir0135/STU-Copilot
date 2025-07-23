@@ -1,3 +1,4 @@
+import os
 from typing import List, Dict, Optional
 import chainlit as cl
 from services.chat_service import ChatService
@@ -7,9 +8,9 @@ from semantic_kernel.agents import ChatCompletionAgent, ChatHistoryAgentThread
 import logging
 import socketio
 
-# Initialize Socket.IO server with a reduced max_http_buffer_size to prevent payload errors
-# This is necessary to handle large messages or responses without hitting the buffer limit.
-sio = socketio.AsyncServer(max_http_buffer_size=1000)  # Reduced size to prevent payload error
+# Set the buffer size to 10MB or use a configurable value from the environment
+MAX_HTTP_BUFFER_SIZE = int(os.getenv("MAX_HTTP_BUFFER_SIZE", 1000))
+sio = socketio.AsyncServer(max_http_buffer_size=MAX_HTTP_BUFFER_SIZE)  # Configurable buffer size
 
 # Basic logging configuration
 logging.basicConfig(level=logging.WARNING)
