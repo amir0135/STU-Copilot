@@ -8,6 +8,11 @@ from semantic_kernel.connectors.ai.open_ai import (
 )
 from .cache_service import load_prompt
 from .plugin_factory import PluginFactory
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class AgentFactory:
@@ -191,6 +196,29 @@ class AgentFactory:
         )
 
         return seismic_agent
+
+    def get_bing_search_agent(self) -> ChatCompletionAgent:
+        """Create a Bing Search agent with the necessary plugins."""
+        agent_name = "bing_search_agent"
+        model_name = "gpt-4.1-nano"
+
+        # Clone the base kernel and add the OpenAI service
+        kernel = self.create_kernel(
+            agent_name=agent_name,
+            model_name=model_name
+        )
+
+        # Create the agent
+        bing_search_agent = ChatCompletionAgent(
+            kernel=kernel,
+            name=agent_name,
+            instructions=load_prompt(agent_name),
+            plugins=[
+                self.plugin_factory.bing_search_tool
+            ]
+        )
+
+        return bing_search_agent
 
     # def create_agent(self,
     #                  kernel: Kernel,

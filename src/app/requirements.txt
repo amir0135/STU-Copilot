@@ -4,3 +4,5 @@ semantic-kernel[all]
 openai
 azure-cosmos
 azure-storage-blob
+azure-ai-projects
+azure-identity
