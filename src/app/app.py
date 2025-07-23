@@ -1,3 +1,4 @@
+import os
 from typing import List, Dict, Optional
 import chainlit as cl
 from services.chat_service import ChatService
@@ -5,12 +6,17 @@ from services.agent_factory import AgentFactory
 from semantic_kernel.contents import ChatHistory
 from semantic_kernel.agents import ChatCompletionAgent, ChatHistoryAgentThread
 import logging
+import socketio
+
+# Set the buffer size to 10MB or use a configurable value from the environment
+MAX_HTTP_BUFFER_SIZE = int(os.getenv("MAX_HTTP_BUFFER_SIZE", 1000))
+sio = socketio.AsyncServer(max_http_buffer_size=MAX_HTTP_BUFFER_SIZE)  # Configurable buffer size
 
 # Basic logging configuration
 logging.basicConfig(level=logging.WARNING)
 logging.getLogger("azure").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)
-logging.getLogger("azure.cosmos").setLevel(logging.WARNING)
+logging.getLogger("azure.cosmos").setLevel(logging.ERROR)
 logging.getLogger("openai").setLevel(logging.INFO)
 logging.getLogger("semantic_kernel").setLevel(logging.INFO)
 logging.getLogger("fastmcp").setLevel(logging.WARNING)
@@ -28,6 +34,7 @@ github_agent: ChatCompletionAgent = agent_factory.get_github_agent()
 microsoft_docs_agent: ChatCompletionAgent = agent_factory.get_microsoft_docs_agent()
 blog_posts_agent: ChatCompletionAgent = agent_factory.get_blog_posts_agent()
 seismic_agent: ChatCompletionAgent = agent_factory.get_seismic_agent()
+bing_search_agent: ChatCompletionAgent = agent_factory.get_bing_search_agent()
 
 @cl.oauth_callback
 async def oauth_callback(
@@ -79,7 +86,7 @@ async def on_message(user_message: cl.Message):
     chat_history: ChatHistory = cl.user_session.get("chat_history")
     chat_thread: ChatHistoryAgentThread = cl.user_session.get("chat_thread")
     loading_message: cl.Message = cl.user_session.get("loading_message")
-    responder_agent: ChatCompletionAgent = seismic_agent
+    responder_agent: ChatCompletionAgent = bing_search_agent
 
     chat_history.add_user_message(user_message.content)
     answer = cl.Message(content="")
