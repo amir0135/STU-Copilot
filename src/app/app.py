@@ -10,7 +10,8 @@ import socketio
 
 # Set the buffer size to 10MB or use a configurable value from the environment
 MAX_HTTP_BUFFER_SIZE = int(os.getenv("MAX_HTTP_BUFFER_SIZE", 1000))
-sio = socketio.AsyncServer(max_http_buffer_size=MAX_HTTP_BUFFER_SIZE)  # Configurable buffer size
+# Configurable buffer size
+sio = socketio.AsyncServer(max_http_buffer_size=MAX_HTTP_BUFFER_SIZE)
 
 # Basic logging configuration
 logging.basicConfig(level=logging.WARNING)
@@ -36,6 +37,7 @@ blog_posts_agent: ChatCompletionAgent = agent_factory.get_blog_posts_agent()
 seismic_agent: ChatCompletionAgent = agent_factory.get_seismic_agent()
 bing_search_agent: ChatCompletionAgent = agent_factory.get_bing_search_agent()
 
+
 @cl.oauth_callback
 async def oauth_callback(
     provider_id: str,
@@ -55,8 +57,18 @@ async def oauth_callback(
 
 @cl.on_chat_start
 async def on_chat_start():
+    # Populate commands in the user session
+    await cl.context.emitter.set_commands(
+        chat_service.get_commands()
+    )
+
+    # Initialize the chat service and chat history
     chat_history: ChatHistory = ChatHistory()
+
+    # Get the user ID and job title from the user session
     user = cl.user_session.get("user")
+
+    # Construct the welcome message
     welcome_message = chat_service.get_welcome_message(
         user_first_name=user.metadata.get("first_name", "Guest"),
         user_job_title=user.metadata.get("job_title", None),
@@ -64,7 +76,7 @@ async def on_chat_start():
 
     # Show the welcome message to the user
     await cl.Message(content=welcome_message).send()
-    
+
     # icon_element = cl.CustomElement(name="Icon")
     # await cl.Message(content="", elements=[icon_element]).send()
 
@@ -86,28 +98,21 @@ async def on_message(user_message: cl.Message):
     chat_history: ChatHistory = cl.user_session.get("chat_history")
     chat_thread: ChatHistoryAgentThread = cl.user_session.get("chat_thread")
     loading_message: cl.Message = cl.user_session.get("loading_message")
-    responder_agent: ChatCompletionAgent = bing_search_agent
+
+    responder_agent: ChatCompletionAgent = None
+
+    responder_agent = select_responder_agent(user_message, chat_history)
 
     chat_history.add_user_message(user_message.content)
     answer = cl.Message(content="")
 
-    chat_service.persist_chat_message(user_message, user_id)    
-    
-    # If this is the beginning of a new chat thread, use the questioner agent
-    # if (len(chat_history) == 2):
-    #     responder_agent = questioner_agent
-    # # Otherwise, use the orchestrator agent
-    # elif (len(chat_history) == 4):
-    #     responder_agent = planner_agent
-    #     await loading_message.send()
-    # else:
-    #     responder_agent = orchestrator_agent
+    chat_service.persist_chat_message(user_message, user_id)
 
     # Stream the agent's response token by token
     async for token in responder_agent.invoke_stream(
             messages=chat_history,
             thread=chat_thread
-    ):        
+    ):
         if token.content:
             await answer.stream_token(token.content.content)
 
@@ -122,6 +127,33 @@ async def on_message(user_message: cl.Message):
     # Persist the chat thread if it is the first message
     if (len(chat_history) == 3):
         chat_service.persist_chat_thread(user_message, user_id, user_job_title)
+
+
+def select_responder_agent(current_message: cl.Message, chat_history: ChatHistory) -> ChatCompletionAgent:
+    
+    # If the current message is a command, use the corresponding agent
+    if current_message.command:
+        # Handle command messages using dictionary mapping
+        command_agent_map = {
+            "GitHub": github_agent,
+            "Microsoft Docs": microsoft_docs_agent,
+            "Seismic Presentation": seismic_agent,
+            "Blog Posts": blog_posts_agent,
+            "Bing Search": bing_search_agent,
+        }        
+        responder_agent = command_agent_map.get(current_message.command, orchestrator_agent)
+
+    # If the current message is not a command, determine the agent based on the chat history
+    else:
+        # Use dictionary mapping for chat history length-based agent selection
+        history_length_agent_map = {
+            2: questioner_agent,  # Beginning of new chat thread
+            4: planner_agent,     # After initial questions answered
+        }
+        responder_agent = history_length_agent_map.get(len(chat_history), orchestrator_agent)
+
+    print(f"Selected responder agent: {responder_agent.name}")
+    return responder_agent
 
 
 @cl.set_starters  # type: ignore

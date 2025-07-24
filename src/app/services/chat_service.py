@@ -8,6 +8,7 @@ import logging
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
+
 class ChatService:
     """Service for managing chat agents and plugins."""
 
@@ -44,3 +45,14 @@ class ChatService:
         welcome_message += "If you have any questions or need support related to Microsoft solutions, sales, technical guidance, or industry insights, please let me know. "
 
         return welcome_message
+
+    def get_commands(self) -> list:
+        """Return the list of available commands."""
+
+        return [
+            {"id": "GitHub", "icon": "github", "description": "Search for GitHub repositories"},            
+            {"id": "Microsoft Docs", "icon": "file-search", "description": "Search Microsoft documentation"},
+            {"id": "Seismic Presentation", "icon": "presentation", "description": "Search for Seismic content"},
+            {"id": "Blog Posts", "icon": "rss", "description": "Search for blog posts", },            
+            {"id": "Bing Search", "icon": "search", "description": "Use Bing to search the web"},
+        ]
