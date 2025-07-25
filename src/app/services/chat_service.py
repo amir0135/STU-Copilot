@@ -54,5 +54,5 @@ class ChatService:
             {"id": "Microsoft Docs", "icon": "file-search", "description": "Search Microsoft documentation"},
             {"id": "Seismic Presentation", "icon": "presentation", "description": "Search for Seismic content"},
             {"id": "Blog Posts", "icon": "rss", "description": "Search for blog posts", },            
-            {"id": "Bing Search", "icon": "search", "description": "Use Bing to search the web"},
+            {"id": "Bing Search", "icon": "search", "description": "Search the web using Bing"},
         ]

@@ -9,7 +9,7 @@ import logging
 import socketio
 
 # Set the buffer size to 10MB or use a configurable value from the environment
-MAX_HTTP_BUFFER_SIZE = int(os.getenv("MAX_HTTP_BUFFER_SIZE", 1000))
+MAX_HTTP_BUFFER_SIZE = int(os.getenv("MAX_HTTP_BUFFER_SIZE", 1_000_000))
 # Configurable buffer size
 sio = socketio.AsyncServer(max_http_buffer_size=MAX_HTTP_BUFFER_SIZE)
 
@@ -99,18 +99,28 @@ async def on_message(user_message: cl.Message):
     chat_thread: ChatHistoryAgentThread = cl.user_session.get("chat_thread")
     loading_message: cl.Message = cl.user_session.get("loading_message")
 
-    responder_agent: ChatCompletionAgent = None
-
-    responder_agent = select_responder_agent(user_message, chat_history)
+    responder_agent: ChatCompletionAgent = select_responder_agent(
+        current_message=user_message, 
+        chat_history=chat_history
+    )
 
     chat_history.add_user_message(user_message.content)
     answer = cl.Message(content="")
 
     chat_service.persist_chat_message(user_message, user_id)
 
+    # Select which messages to send to the agent
+    messages = chat_history if responder_agent in [
+        orchestrator_agent,
+        questioner_agent,
+        planner_agent
+    ] else user_message.content
+
+    print("Messages to agent:", messages)
+
     # Stream the agent's response token by token
     async for token in responder_agent.invoke_stream(
-            messages=chat_history,
+            messages=messages,
             thread=chat_thread
     ):
         if token.content:
@@ -130,7 +140,7 @@ async def on_message(user_message: cl.Message):
 
 
 def select_responder_agent(current_message: cl.Message, chat_history: ChatHistory) -> ChatCompletionAgent:
-    
+
     # If the current message is a command, use the corresponding agent
     if current_message.command:
         # Handle command messages using dictionary mapping
@@ -140,8 +150,11 @@ def select_responder_agent(current_message: cl.Message, chat_history: ChatHistor
             "Seismic Presentation": seismic_agent,
             "Blog Posts": blog_posts_agent,
             "Bing Search": bing_search_agent,
-        }        
-        responder_agent = command_agent_map.get(current_message.command, orchestrator_agent)
+        }
+        responder_agent = command_agent_map.get(
+            current_message.command,
+            orchestrator_agent
+        )
 
     # If the current message is not a command, determine the agent based on the chat history
     else:
@@ -150,7 +163,10 @@ def select_responder_agent(current_message: cl.Message, chat_history: ChatHistor
             2: questioner_agent,  # Beginning of new chat thread
             4: planner_agent,     # After initial questions answered
         }
-        responder_agent = history_length_agent_map.get(len(chat_history), orchestrator_agent)
+        responder_agent = history_length_agent_map.get(
+            len(chat_history),
+            orchestrator_agent
+        )
 
     print(f"Selected responder agent: {responder_agent.name}")
     return responder_agent

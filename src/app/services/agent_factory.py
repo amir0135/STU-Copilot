@@ -7,7 +7,10 @@ from semantic_kernel.connectors.ai.open_ai import (
     OpenAIChatPromptExecutionSettings,
 )
 from .cache_service import load_prompt
-from .plugin_factory import PluginFactory
+from .plugin_factory import (
+    GitHubPlugin, MicrosoftDocsPlugin, BlogPostsPlugin, 
+    SeismicPlugin, BingPlugin
+)
 import logging
 
 # Configure logging
@@ -24,7 +27,11 @@ class AgentFactory:
         if not endpoint or not api_key:
             raise EnvironmentError(
                 "Missing Azure Open AI endpoint or API key.")
-        self.plugin_factory = PluginFactory()
+        self.github_plugin = GitHubPlugin()
+        self.microsoft_docs_plugin = MicrosoftDocsPlugin()
+        self.blog_posts_plugin = BlogPostsPlugin()
+        self.seismic_plugin = SeismicPlugin()
+        self.bing_plugin = BingPlugin()
 
     def create_kernel(self,
                       agent_name: str,
@@ -59,7 +66,6 @@ class AgentFactory:
             instructions=load_prompt(agent_name),
             plugins=[
                 self.get_github_agent(),
-                self.plugin_factory.microsoft_docs_tool
             ]
         )
 
@@ -108,22 +114,20 @@ class AgentFactory:
     def get_github_agent(self) -> ChatCompletionAgent:
         """Create a GitHub agent with the necessary plugins."""
         agent_name = "github_agent"
-        model_name = "gpt-4.1-nano"
+        model_name = "gpt-4.1-mini"
 
         # Clone the base kernel and add the OpenAI service
         kernel = self.create_kernel(
             agent_name=agent_name,
-            model_name=model_name
-        )
+            model_name=model_name,
+        )        
 
         # Create the agent
         github_agent = ChatCompletionAgent(
             kernel=kernel,
             name=agent_name,
             instructions=load_prompt(agent_name),
-            plugins=[
-                self.plugin_factory.github_tool
-            ]
+            plugins=[self.github_plugin.github_repository_search]          
         )
 
         return github_agent
@@ -138,15 +142,13 @@ class AgentFactory:
             agent_name=agent_name,
             model_name=model_name
         )
-        kernel.add_plugins([
-            self.plugin_factory.microsoft_docs_tool
-        ])
-
+        
         # Create the agent
         microsoft_docs_agent = ChatCompletionAgent(
             kernel=kernel,
             name=agent_name,
             instructions=load_prompt(agent_name),
+            plugins=[self.microsoft_docs_plugin.microsoft_docs_search]
         )
 
         return microsoft_docs_agent
@@ -154,45 +156,41 @@ class AgentFactory:
     def get_blog_posts_agent(self) -> ChatCompletionAgent:
         """Create a Blog Posts agent with the necessary plugins."""
         agent_name = "blog_posts_agent"
-        model_name = "gpt-4.1-nano"
+        model_name = "gpt-4.1-mini"
 
         # Clone the base kernel and add the OpenAI service
         kernel = self.create_kernel(
             agent_name=agent_name,
             model_name=model_name
         )
-
+        
         # Create the agent
         blog_posts_agent = ChatCompletionAgent(
             kernel=kernel,
             name=agent_name,
             instructions=load_prompt(agent_name),
-            plugins=[
-                self.plugin_factory.blog_posts_tool
-            ]
+            plugins=[self.blog_posts_plugin.blog_posts_search]
         )
 
         return blog_posts_agent
-    
+
     def get_seismic_agent(self) -> ChatCompletionAgent:
         """Create a Seismic agent with the necessary plugins."""
         agent_name = "seismic_agent"
-        model_name = "gpt-4.1-nano"
+        model_name = "gpt-4.1-mini"
 
         # Clone the base kernel and add the OpenAI service
         kernel = self.create_kernel(
             agent_name=agent_name,
             model_name=model_name
         )
-
+        
         # Create the agent
         seismic_agent = ChatCompletionAgent(
             kernel=kernel,
             name=agent_name,
             instructions=load_prompt(agent_name),
-            plugins=[
-                self.plugin_factory.seismic_tool
-            ]
+            plugins=[self.seismic_plugin.seismic_search]
         )
 
         return seismic_agent
@@ -200,22 +198,20 @@ class AgentFactory:
     def get_bing_search_agent(self) -> ChatCompletionAgent:
         """Create a Bing Search agent with the necessary plugins."""
         agent_name = "bing_search_agent"
-        model_name = "gpt-4.1-nano"
+        model_name = "gpt-4.1-mini"
 
         # Clone the base kernel and add the OpenAI service
         kernel = self.create_kernel(
             agent_name=agent_name,
             model_name=model_name
         )
-
+        
         # Create the agent
         bing_search_agent = ChatCompletionAgent(
             kernel=kernel,
             name=agent_name,
             instructions=load_prompt(agent_name),
-            plugins=[
-                self.plugin_factory.bing_search_tool
-            ]
+            plugins=[self.bing_plugin.bing_search]
         )
 
         return bing_search_agent
@@ -247,4 +243,4 @@ class AgentFactory:
             function_choice_behavior=FunctionChoiceBehavior.Auto(
                 filters={"excluded_plugins": ["ChatBot"]}
             )
-        )
+        )   

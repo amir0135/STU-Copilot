@@ -106,7 +106,7 @@ class SeismicContent:
         except Exception:
             return date_str
 
-    def __init__(self, id: str, name: str, url: str, version: str, version_creation_date: str, publish_date: str, creation_date: str,
+    def __init__(self, id: str, name: str, url: str, version: str, version_creation_date: str, last_update: str, creation_date: str,
                  expiration_date: str, description: str, size: str, format: str, confidentiality: str, sales_stage: str,
                  audience: str, competitor: str, level: str, language: str, industry: str, initiative: str, segment: str,
                  content_sub_type: str, industry_sub_vertical: str, solution_area: str, content_group: str, products: str,
@@ -116,7 +116,7 @@ class SeismicContent:
         self.url = url
         self.version = version
         self.version_creation_date = self._to_iso_date(version_creation_date)
-        self.publish_date = self._to_iso_date(publish_date)
+        self.last_update = self._to_iso_date(last_update)
         self.creation_date = self._to_iso_date(creation_date)
         self.expiration_date = self._to_iso_date(expiration_date)
         self.description = description
@@ -149,7 +149,7 @@ class SeismicContent:
             "url": self.url,
             "version": self.version,
             "version_creation_date": self.version_creation_date,
-            "publish_date": self.publish_date,
+            "last_update": self.last_update,
             "creation_date": self.creation_date,
             "expiration_date": self.expiration_date,
             "description": self.description,
@@ -185,7 +185,7 @@ class SeismicContent:
             version=data.get("version"),
             version_creation_date=SeismicContent._to_iso_date(
                 data.get("version_creation_date")),
-            publish_date=SeismicContent._to_iso_date(data.get("publish_date")),
+            last_update=SeismicContent._to_iso_date(data.get("last_update")),
             creation_date=SeismicContent._to_iso_date(
                 data.get("creation_date")),
             expiration_date=SeismicContent._to_iso_date(
