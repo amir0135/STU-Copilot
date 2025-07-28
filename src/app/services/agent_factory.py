@@ -8,7 +8,7 @@ from semantic_kernel.connectors.ai.open_ai import (
 )
 from .cache_service import load_prompt
 from .plugin_factory import (
-    GitHubPlugin, MicrosoftDocsPlugin, BlogPostsPlugin, 
+    GitHubPlugin, MicrosoftDocsPlugin, BlogPostsPlugin,
     SeismicPlugin, BingPlugin
 )
 import logging
@@ -27,11 +27,25 @@ class AgentFactory:
         if not endpoint or not api_key:
             raise EnvironmentError(
                 "Missing Azure Open AI endpoint or API key.")
-        self.github_plugin = GitHubPlugin()
-        self.microsoft_docs_plugin = MicrosoftDocsPlugin()
-        self.blog_posts_plugin = BlogPostsPlugin()
-        self.seismic_plugin = SeismicPlugin()
-        self.bing_plugin = BingPlugin()
+
+        self.plugins = {
+            "github": GitHubPlugin(),
+            "microsoft_docs": MicrosoftDocsPlugin(),
+            "blog_posts": BlogPostsPlugin(),
+            "seismic": SeismicPlugin(),
+            "bing": BingPlugin()
+        }
+        self.agents = {
+            "orchestrator": self.get_orchestrator_agent(),
+            "questioner": self.get_questioner_agent(),
+            "planner": self.get_planner_agent(),
+            "github": self.get_github_agent(),
+            "microsoft_docs": self.get_microsoft_docs_agent(),
+            "blog_posts": self.get_blog_posts_agent(),
+            "seismic": self.get_seismic_agent(),
+            "bing_search": self.get_bing_search_agent(),
+            "architect": self.get_architect_agent()
+        }
 
     def create_kernel(self,
                       agent_name: str,
@@ -48,6 +62,10 @@ class AgentFactory:
 
         return kernel
 
+    def get_agents(self) -> dict[str, ChatCompletionAgent]:
+        """Get all agents."""
+        return self.agents
+
     def get_orchestrator_agent(self) -> ChatCompletionAgent:
         """Create an orchestrator agent with the necessary plugins."""
         agent_name = "orchestrator_agent"
@@ -56,7 +74,8 @@ class AgentFactory:
         # Create a new kernel instance with the OpenAI service
         kernel = self.create_kernel(
             agent_name=agent_name,
-            model_name=model_name
+            model_name=model_name,
+
         )
 
         # Create the agent
@@ -120,14 +139,14 @@ class AgentFactory:
         kernel = self.create_kernel(
             agent_name=agent_name,
             model_name=model_name,
-        )        
+        )
 
         # Create the agent
         github_agent = ChatCompletionAgent(
             kernel=kernel,
             name=agent_name,
             instructions=load_prompt(agent_name),
-            plugins=[self.github_plugin.github_repository_search]          
+            plugins=[self.plugins["github"].github_repository_search]
         )
 
         return github_agent
@@ -135,20 +154,20 @@ class AgentFactory:
     def get_microsoft_docs_agent(self) -> ChatCompletionAgent:
         """Create a Microsoft Docs agent with the necessary plugins."""
         agent_name = "microsoft_docs_agent"
-        model_name = "gpt-4.1-mini"
+        model_name = "gpt-4.1"
 
         # Clone the base kernel and add the OpenAI service
         kernel = self.create_kernel(
             agent_name=agent_name,
             model_name=model_name
         )
-        
+
         # Create the agent
         microsoft_docs_agent = ChatCompletionAgent(
             kernel=kernel,
             name=agent_name,
             instructions=load_prompt(agent_name),
-            plugins=[self.microsoft_docs_plugin.microsoft_docs_search]
+            plugins=[self.plugins["microsoft_docs"].microsoft_docs_search]
         )
 
         return microsoft_docs_agent
@@ -163,13 +182,13 @@ class AgentFactory:
             agent_name=agent_name,
             model_name=model_name
         )
-        
+
         # Create the agent
         blog_posts_agent = ChatCompletionAgent(
             kernel=kernel,
             name=agent_name,
             instructions=load_prompt(agent_name),
-            plugins=[self.blog_posts_plugin.blog_posts_search]
+            plugins=[self.plugins["blog_posts"].blog_posts_search]
         )
 
         return blog_posts_agent
@@ -184,13 +203,13 @@ class AgentFactory:
             agent_name=agent_name,
             model_name=model_name
         )
-        
+
         # Create the agent
         seismic_agent = ChatCompletionAgent(
             kernel=kernel,
             name=agent_name,
             instructions=load_prompt(agent_name),
-            plugins=[self.seismic_plugin.seismic_search]
+            plugins=[self.plugins["seismic"].seismic_search]
         )
 
         return seismic_agent
@@ -205,42 +224,44 @@ class AgentFactory:
             agent_name=agent_name,
             model_name=model_name
         )
-        
+
         # Create the agent
         bing_search_agent = ChatCompletionAgent(
             kernel=kernel,
             name=agent_name,
             instructions=load_prompt(agent_name),
-            plugins=[self.bing_plugin.bing_search]
+            plugins=[self.plugins["bing"].bing_search]
         )
 
         return bing_search_agent
 
-    # def create_agent(self,
-    #                  kernel: Kernel,
-    #                  agent_name: str,
-    #                  model_name: str,
-    #                  instructions: str = None
-    #                  ) -> ChatCompletionAgent:
-    #     """Create a chat completion agent."""
-    #     kernel.add_service(
-    #         OpenAIChatCompletion(
-    #             ai_model_id=model_name,
-    #             async_client=self.base_client,
-    #             service_id=agent_name,
-    #         )
-    #     )
-    #     return ChatCompletionAgent(
-    #         kernel=kernel,
-    #         name=agent_name,
-    #         instructions=instructions or load_prompt(agent_name),
-    #     )
+    def get_architect_agent(self) -> ChatCompletionAgent:
+        """Create an architect agent with the necessary plugins."""
+        agent_name = "architect_agent"
+        model_name = "o3-mini"
+
+        # Clone the base kernel and add the OpenAI service
+        kernel = self.create_kernel(
+            agent_name=agent_name,
+            model_name=model_name
+        )
+
+        # Create the agent
+        architect_agent = ChatCompletionAgent(
+            kernel=kernel,
+            name=agent_name,
+            instructions=load_prompt(agent_name),
+            plugins=[
+                self.plugins["microsoft_docs"].microsoft_docs_search,
+                self.plugins["bing"].bing_search
+            ]
+        )
+
+        return architect_agent
 
     @staticmethod
     def execution_settings() -> OpenAIChatPromptExecutionSettings:
         """Create request settings for the OpenAI service."""
         return OpenAIChatPromptExecutionSettings(
-            function_choice_behavior=FunctionChoiceBehavior.Auto(
-                filters={"excluded_plugins": ["ChatBot"]}
-            )
-        )   
+            function_choice_behavior=FunctionChoiceBehavior.Auto()
+        )

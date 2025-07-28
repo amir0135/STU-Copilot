@@ -1,5 +1,6 @@
 import os
 from typing import List, Dict, Optional
+from aiohttp import Payload
 import chainlit as cl
 from services.chat_service import ChatService
 from services.agent_factory import AgentFactory
@@ -7,11 +8,17 @@ from semantic_kernel.contents import ChatHistory
 from semantic_kernel.agents import ChatCompletionAgent, ChatHistoryAgentThread
 import logging
 import socketio
+from engineio.payload import Payload
+
 
 # Set the buffer size to 10MB or use a configurable value from the environment
-MAX_HTTP_BUFFER_SIZE = int(os.getenv("MAX_HTTP_BUFFER_SIZE", 1_000_000))
+MAX_HTTP_BUFFER_SIZE = int(os.getenv("MAX_HTTP_BUFFER_SIZE", 100_000_000))
 # Configurable buffer size
-sio = socketio.AsyncServer(max_http_buffer_size=MAX_HTTP_BUFFER_SIZE)
+sio = socketio.AsyncServer(
+    async_mode='aiohttp',
+    transport='websocket',
+    max_http_buffer_size=MAX_HTTP_BUFFER_SIZE)
+Payload.max_decode_packets = 500
 
 # Basic logging configuration
 logging.basicConfig(level=logging.WARNING)
@@ -28,14 +35,7 @@ logger = logging.getLogger(__name__)
 # Initialize services and agents
 chat_service: ChatService = ChatService()
 agent_factory: AgentFactory = AgentFactory()
-orchestrator_agent: ChatCompletionAgent = agent_factory.get_orchestrator_agent()
-questioner_agent: ChatCompletionAgent = agent_factory.get_questioner_agent()
-planner_agent: ChatCompletionAgent = agent_factory.get_planner_agent()
-github_agent: ChatCompletionAgent = agent_factory.get_github_agent()
-microsoft_docs_agent: ChatCompletionAgent = agent_factory.get_microsoft_docs_agent()
-blog_posts_agent: ChatCompletionAgent = agent_factory.get_blog_posts_agent()
-seismic_agent: ChatCompletionAgent = agent_factory.get_seismic_agent()
-bing_search_agent: ChatCompletionAgent = agent_factory.get_bing_search_agent()
+agents: dict[str, ChatCompletionAgent] = agent_factory.get_agents()
 
 
 @cl.oauth_callback
@@ -100,9 +100,12 @@ async def on_message(user_message: cl.Message):
     loading_message: cl.Message = cl.user_session.get("loading_message")
 
     responder_agent: ChatCompletionAgent = select_responder_agent(
-        current_message=user_message, 
+        current_message=user_message,
         chat_history=chat_history
     )
+
+    # Temp
+    # responder_agent = architect_agent
 
     chat_history.add_user_message(user_message.content)
     answer = cl.Message(content="")
@@ -111,9 +114,9 @@ async def on_message(user_message: cl.Message):
 
     # Select which messages to send to the agent
     messages = chat_history if responder_agent in [
-        orchestrator_agent,
-        questioner_agent,
-        planner_agent
+        agents["orchestrator"],
+        agents["questioner"],
+        agents["planner"]
     ] else user_message.content
 
     print("Messages to agent:", messages)
@@ -145,28 +148,29 @@ def select_responder_agent(current_message: cl.Message, chat_history: ChatHistor
     if current_message.command:
         # Handle command messages using dictionary mapping
         command_agent_map = {
-            "GitHub": github_agent,
-            "Microsoft Docs": microsoft_docs_agent,
-            "Seismic Presentation": seismic_agent,
-            "Blog Posts": blog_posts_agent,
-            "Bing Search": bing_search_agent,
+            "GitHub": agents["github"],
+            "Microsoft Docs": agents["microsoft_docs"],
+            "Seismic Presentation": agents["seismic"],
+            "Blog Posts": agents["blog_posts"],
+            "Bing Search": agents["bing_search"],
         }
         responder_agent = command_agent_map.get(
             current_message.command,
-            orchestrator_agent
+            agents["orchestrator"]
         )
 
     # If the current message is not a command, determine the agent based on the chat history
     else:
         # Use dictionary mapping for chat history length-based agent selection
-        history_length_agent_map = {
-            2: questioner_agent,  # Beginning of new chat thread
-            4: planner_agent,     # After initial questions answered
-        }
-        responder_agent = history_length_agent_map.get(
-            len(chat_history),
-            orchestrator_agent
-        )
+        # history_length_agent_map = {
+        #     2: questioner_agent,  # Beginning of new chat thread
+        #     4: planner_agent,     # After initial questions answered
+        # }
+        # responder_agent = history_length_agent_map.get(
+        #     len(chat_history),
+        #     orchestrator_agent
+        # )
+        responder_agent = agents["architect"]
 
     print(f"Selected responder agent: {responder_agent.name}")
     return responder_agent
