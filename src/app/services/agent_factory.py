@@ -1,6 +1,7 @@
 import os
 from semantic_kernel import Kernel
-from semantic_kernel.agents import ChatCompletionAgent
+from semantic_kernel.agents import ChatCompletionAgent, GroupChatManager, GroupChatOrchestration, BooleanResult, StringResult, MessageResult
+from semantic_kernel.contents import ChatMessageContent, ChatHistory
 from semantic_kernel.connectors.ai import FunctionChoiceBehavior
 from semantic_kernel.connectors.ai.open_ai import (
     AzureChatCompletion,
@@ -36,7 +37,6 @@ class AgentFactory:
             "bing": BingPlugin()
         }
         self.agents = {
-            "orchestrator": self.get_orchestrator_agent(),
             "questioner": self.get_questioner_agent(),
             "planner": self.get_planner_agent(),
             "github": self.get_github_agent(),
@@ -46,6 +46,7 @@ class AgentFactory:
             "bing_search": self.get_bing_search_agent(),
             "architect": self.get_architect_agent()
         }
+        self.agents["orchestrator"] = self.get_orchestrator_agent()
 
     def create_kernel(self,
                       agent_name: str,
@@ -84,7 +85,8 @@ class AgentFactory:
             name=agent_name,
             instructions=load_prompt(agent_name),
             plugins=[
-                self.get_github_agent(),
+                self.agents["questioner"],
+                self.agents["planner"]
             ]
         )
 
@@ -259,9 +261,67 @@ class AgentFactory:
 
         return architect_agent
 
+    def get_architecture_group_chat_manager(self) -> GroupChatOrchestration:
+        """Create an architecture group chat manager."""
+        agent_name = "seismic_agent"
+        model_name = "gpt-4.1"
+
+        # Clone the base kernel and add the OpenAI service
+        kernel = self.create_kernel(
+            agent_name=agent_name,
+            model_name=model_name
+        )
+
+        # Create the group chat manager
+        group_chat_orchestration = GroupChatOrchestration(
+            kernel=kernel,
+            name="architecture_group_chat_manager",
+            manager=AgentFactory.ArchitectureGroupChatManager(max_rounds=5),
+            members=[
+                self.agents["questioner"],
+                self.agents["microsoft_docs"],
+                self.agents["github"]
+            ],
+            agent_response_callback=self.agent_response_callback
+        )
+        
+        return group_chat_orchestration
+
+    def agent_response_callback(self, message: ChatMessageContent) -> None:
+        print(f"**{message.name}**\n{message.content}")
+
     @staticmethod
     def execution_settings() -> OpenAIChatPromptExecutionSettings:
         """Create request settings for the OpenAI service."""
         return OpenAIChatPromptExecutionSettings(
             function_choice_behavior=FunctionChoiceBehavior.Auto()
         )
+
+    class ArchitectureGroupChatManager(GroupChatManager):
+        async def filter_results(self, chat_history: ChatHistory) -> MessageResult:
+            # Custom logic to filter or summarize chat results
+            summary = "Summary of the discussion."
+            return MessageResult(result=ChatMessageContent(role="assistant", content=summary), reason="Custom summary logic.")
+
+        async def select_next_agent(self, chat_history: ChatHistory, participant_descriptions: dict[str, str]) -> StringResult:
+            # Randomly select an agent from the participants
+            print("Current round:", self.current_round)
+            import random
+            next_agent = random.choice(list(participant_descriptions.keys()))
+            return StringResult(result=next_agent, reason="Custom selection logic.")
+
+        async def should_request_user_input(self, chat_history: ChatHistory) -> BooleanResult:
+            # Custom logic to decide if user input is needed
+            if len(chat_history.messages) < 3:
+                return BooleanResult(result=True, reason="More context needed from user.")
+            return BooleanResult(result=False, reason="No user input required.")
+
+        async def should_terminate(self, chat_history: ChatHistory) -> BooleanResult:
+            # Optionally call the base implementation to check for default termination logic
+            base_result = await super().should_terminate(chat_history)
+            if base_result.result:
+                return base_result
+            # Custom logic to determine if the chat should terminate
+            # Example: end after 50 messages
+            should_end = len(chat_history.messages) > 50
+            return BooleanResult(result=should_end, reason="Custom termination logic.")
