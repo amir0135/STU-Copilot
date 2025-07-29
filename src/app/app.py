@@ -20,16 +20,21 @@ sio = socketio.AsyncServer(
     max_http_buffer_size=MAX_HTTP_BUFFER_SIZE)
 Payload.max_decode_packets = 500
 
+
 # Basic logging configuration
-logging.basicConfig(level=logging.WARNING)
-logging.getLogger("azure").setLevel(logging.WARNING)
-logging.getLogger("httpx").setLevel(logging.WARNING)
-logging.getLogger("azure.cosmos").setLevel(logging.ERROR)
-logging.getLogger("openai").setLevel(logging.INFO)
+logging.basicConfig(level=logging.CRITICAL)
+logging.getLogger("azure").setLevel(logging.CRITICAL)
+logging.getLogger("httpx").setLevel(logging.ERROR)
+logging.getLogger("azure.cosmos").setLevel(logging.CRITICAL)
+logging.getLogger("openai").setLevel(logging.ERROR)
 logging.getLogger("semantic_kernel").setLevel(logging.INFO)
-logging.getLogger("fastmcp").setLevel(logging.WARNING)
-logging.getLogger("http").setLevel(logging.ERROR)
-logging.getLogger("asyncio").setLevel(logging.ERROR)
+logging.getLogger("asyncio").setLevel(logging.CRITICAL)
+logging.getLogger("httpcore").setLevel(logging.CRITICAL)
+logging.getLogger("anyio").setLevel(logging.CRITICAL)
+logging.getLogger("aiohttp").setLevel(logging.CRITICAL)
+logging.getLogger("aiohttp.access").setLevel(logging.CRITICAL)
+logging.getLogger("engineio").setLevel(logging.CRITICAL)
+logging.getLogger("socketio").setLevel(logging.CRITICAL)
 logger = logging.getLogger(__name__)
 
 # Initialize services and agents
@@ -74,6 +79,9 @@ async def on_chat_start():
         user_job_title=user.metadata.get("job_title", None),
     )
 
+    # Clear the latest agent name
+    latest_agent_name = None
+
     # Show the welcome message to the user
     await cl.Message(content=welcome_message).send()
 
@@ -82,13 +90,10 @@ async def on_chat_start():
 
     chat_history.add_assistant_message(welcome_message)
 
-    loading_message = cl.Message(content="⏳ Thinking...")
-
     cl.user_session.set("chat_service", chat_service)
     cl.user_session.set("chat_history", chat_history)
     cl.user_session.set("chat_thread", None)
-    cl.user_session.set("loading_message", loading_message)
-    cl.user_session.set("latest_agent", None)
+    cl.user_session.set("latest_agent_name", latest_agent_name)
 
 
 @cl.on_message
@@ -98,18 +103,21 @@ async def on_message(user_message: cl.Message):
     chat_service: ChatService = cl.user_session.get("chat_service")
     chat_history: ChatHistory = cl.user_session.get("chat_history")
     chat_thread: ChatHistoryAgentThread = cl.user_session.get("chat_thread")
-    loading_message: cl.Message = cl.user_session.get("loading_message")
-    latest_agent_name: str = cl.user_session.get("latest_agent")
-    print(f"Latest agent in use: {latest_agent_name}")
 
-    responder_agent: ChatCompletionAgent = select_responder_agent(
+    responder_agent: ChatCompletionAgent = agent_factory.select_responder_agent(
         current_message=user_message,
         chat_history=chat_history,
-        latest_agent_name=latest_agent_name
+        latest_agent_name=cl.user_session.get("latest_agent_name")
     )
+    print(f"Selected responder agent: {responder_agent.name}")
+
+    agent_actions = chat_service.get_actions(agent_name=responder_agent.name)
+
+    # Set the latest agent in the user session
+    cl.user_session.set("latest_agent_name", responder_agent.name)
 
     chat_history.add_user_message(user_message.content)
-    answer = cl.Message(content="")
+    answer = cl.Message(content="", actions=agent_actions)
 
     chat_service.persist_chat_message(user_message, user_id)
 
@@ -120,10 +128,10 @@ async def on_message(user_message: cl.Message):
         agents["planner"]
     ] else user_message.content
 
-    print("Messages to agent:", messages)
-    
+    # print("Messages to agent:", messages)
+
     # Set the latest agent in the user session
-    cl.user_session.set("latest_agent", responder_agent.name)    
+    cl.user_session.set("latest_agent", responder_agent.name)
 
     # Stream the agent's response token by token
     async for token in responder_agent.invoke_stream(
@@ -146,44 +154,6 @@ async def on_message(user_message: cl.Message):
         chat_service.persist_chat_thread(user_message, user_id, user_job_title)
 
 
-def select_responder_agent(current_message: cl.Message, 
-                           chat_history: ChatHistory,
-                           latest_agent_name: str) -> ChatCompletionAgent:
-    """Select the appropriate agent based on the current message and chat history."""
-    
-    print(f"Chat history length: {len(chat_history)}")
-    print(f"Latest agent in use: {latest_agent_name}")
-    
-    # If the current message is a command, use the corresponding agent
-    if current_message.command:
-        # Handle command messages using dictionary mapping
-        command_agent_map = {
-            "GitHub": agents["github"],
-            "Microsoft Docs": agents["microsoft_docs"],
-            "Seismic Presentation": agents["seismic"],
-            "Blog Posts": agents["blog_posts"],
-            "Bing Search": agents["bing_search"],
-        }
-        return command_agent_map.get(current_message.command)
-    
-        
-    # If the current message is not a command, determine the agent based on the chat history
-    else:
-        # Use dictionary mapping for chat history length-based agent selection
-        history_length_agent_map = {
-            1: agents["questioner"],
-            3: agents["planner"],
-        }
-        responder_agent = history_length_agent_map.get(
-            len(chat_history),
-            agents["orchestrator"]
-        )
-        responder_agent = agents["architect"]
-
-    print(f"Selected responder agent: {responder_agent.name}")
-    return responder_agent
-
-
 @cl.set_starters  # type: ignore
 async def set_starts() -> List[cl.Starter]:
     return [
@@ -200,3 +170,20 @@ async def set_starts() -> List[cl.Starter]:
             message="How is the weather today?",
         ),
     ]
+
+
+@cl.action_callback("action_button")
+async def on_action_button(action: cl.Action):
+    """Handle action button clicks."""
+    await on_message(cl.Message(
+        content=get_user_prompts(),
+        command=action.payload["command"]
+    ))
+
+
+def get_user_prompts() -> str:
+    """Extract user prompts from the chat history."""
+    chat_history: ChatHistory = cl.user_session.get("chat_history")
+    return "\n".join(
+        [msg.content for msg in chat_history if msg.role == "user"]
+    )

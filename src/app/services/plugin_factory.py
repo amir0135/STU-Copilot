@@ -1,15 +1,16 @@
 import os
 from contextlib import asynccontextmanager
 from semantic_kernel.functions import kernel_function
-from semantic_kernel.connectors.mcp import MCPStreamableHttpPlugin
+from semantic_kernel.connectors.mcp import MCPStreamableHttpPlugin, TextContent
 from azure.identity.aio import DefaultAzureCredential
 from semantic_kernel.agents import AzureAIAgent
 import chainlit as cl
 from .cosmos_db_service import CosmosDBService
 import logging
+import json
 
 # Basic logging configuration
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.CRITICAL)
 logger = logging.getLogger(__name__)
 
 # Initialize CosmosDBService
@@ -49,15 +50,18 @@ class MicrosoftDocsPlugin:
     @kernel_function(name="microsoft_docs_search",
                      description="Search for relevant Microsoft documentation for a given topic.")
     @cl.step(type="tool", name="Microsoft Documentation Search")
-    async def microsoft_docs_search(input: str) -> str:
+    async def microsoft_docs_search(input: str) -> list[TextContent]:
         """Search for relevant Microsoft documentation."""
         async with MCPStreamableHttpPlugin(
             name="Microsoft Documentation Search",
             url="https://learn.microsoft.com/api/mcp",
             request_timeout=30
         ) as plugin:
-            result = await plugin.call_tool("microsoft_docs_search", question=input)
-            return result
+            response: list[TextContent] = await plugin.call_tool("microsoft_docs_search", question=input)
+            text = response[0].inner_content.text
+            json_data = json.loads(text)
+            contents = [item["content"] for item in json_data]
+            return "----".join(contents)
 
 
 class BlogPostsPlugin:
