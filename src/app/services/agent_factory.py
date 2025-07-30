@@ -7,10 +7,10 @@ from semantic_kernel.connectors.ai.open_ai import (
     AzureChatCompletion,
     OpenAIChatPromptExecutionSettings,
 )
-from .cache_service import load_prompt
+from .cache_service import cache_service
 from .plugin_factory import (
-    GitHubPlugin, MicrosoftDocsPlugin, BlogPostsPlugin,
-    SeismicPlugin, BingPlugin
+    github_plugin, microsoft_docs_plugin, blog_posts_plugin,
+    seismic_plugin, bing_plugin
 )
 import logging
 import chainlit as cl
@@ -28,13 +28,7 @@ class AgentFactory:
         api_key = os.getenv("AI_FOUNDRY_KEY")
         if not endpoint or not api_key:
             raise EnvironmentError(
-                "Missing Azure Open AI endpoint or API key.")
-
-        self.github_plugin = GitHubPlugin()
-        self.microsoft_docs_plugin = MicrosoftDocsPlugin()
-        self.blog_posts_plugin = BlogPostsPlugin()
-        self.seismic_plugin = SeismicPlugin()
-        self.bing_plugin = BingPlugin()
+                "Missing Azure Open AI endpoint or API key.")        
 
         self.agents = {
             "questioner": self.get_questioner_agent(),
@@ -85,7 +79,7 @@ class AgentFactory:
             kernel=kernel,
             name=agent_name,
             description="Orchestrator agent that manages the workflow of other agents.",
-            instructions=load_prompt(agent_name),
+            instructions=cache_service.load_prompt(agent_name),
             plugins=[
                 self.agents["questioner"],
                 self.agents["microsoft_docs"],
@@ -114,7 +108,7 @@ class AgentFactory:
             kernel=kernel,
             description="Questioner agent that asks clarifying questions to gather more information.",
             name=agent_name,
-            instructions=load_prompt(agent_name)
+            instructions=cache_service.load_prompt(agent_name)
         )
 
         return questioner_agent
@@ -134,7 +128,7 @@ class AgentFactory:
         planner_agent = ChatCompletionAgent(
             kernel=kernel,
             name=agent_name,
-            instructions=load_prompt(agent_name)
+            instructions=cache_service.load_prompt(agent_name)
         )
 
         return planner_agent
@@ -155,8 +149,8 @@ class AgentFactory:
             kernel=kernel,
             name=agent_name,
             description="GitHub agent that fetches relevant information from GitHub repositories.",
-            instructions=load_prompt(agent_name),
-            plugins=[self.github_plugin.github_repository_search]
+            instructions=cache_service.load_prompt(agent_name),
+            plugins=[github_plugin.github_repository_search]
         )
 
         return github_agent
@@ -177,8 +171,8 @@ class AgentFactory:
             kernel=kernel,
             name=agent_name,
             description="Microsoft Docs agent that fetches relevant documentation from Microsoft Docs.",
-            instructions=load_prompt(agent_name),
-            plugins=[self.microsoft_docs_plugin.microsoft_docs_search]            
+            instructions=cache_service.load_prompt(agent_name),
+            plugins=[microsoft_docs_plugin.microsoft_docs_search]            
         )
 
         return microsoft_docs_agent
@@ -199,8 +193,8 @@ class AgentFactory:
             kernel=kernel,
             name=agent_name,
             description="Blog Posts agent that searches for relevant blog posts.",
-            instructions=load_prompt(agent_name),
-            plugins=[self.blog_posts_plugin.blog_posts_search]
+            instructions=cache_service.load_prompt(agent_name),
+            plugins=[blog_posts_plugin.blog_posts_search]
         )
 
         return blog_posts_agent
@@ -221,8 +215,8 @@ class AgentFactory:
             kernel=kernel,
             name=agent_name,
             description="Seismic agent that searches for relevant presentations and PowerPoints.",
-            instructions=load_prompt(agent_name),
-            plugins=[self.seismic_plugin.seismic_search]
+            instructions=cache_service.load_prompt(agent_name),
+            plugins=[seismic_plugin.seismic_search]
         )
 
         return seismic_agent
@@ -243,8 +237,8 @@ class AgentFactory:
             kernel=kernel,
             name=agent_name,
             description="Bing Search agent that performs web searches to find relevant information.",
-            instructions=load_prompt(agent_name),
-            plugins=[self.bing_plugin.bing_search]
+            instructions=cache_service.load_prompt(agent_name),
+            plugins=[bing_plugin.bing_search]
         )
 
         return bing_search_agent
@@ -264,10 +258,10 @@ class AgentFactory:
         architect_agent = ChatCompletionAgent(
             kernel=kernel,
             name=agent_name,
-            instructions=load_prompt(agent_name),
+            instructions=cache_service.load_prompt(agent_name),
             plugins=[
-                self.microsoft_docs_plugin.microsoft_docs_search,
-                self.bing_plugin.bing_search
+                microsoft_docs_plugin.microsoft_docs_search,
+                bing_plugin.bing_search
             ]
         )
 
@@ -289,7 +283,7 @@ class AgentFactory:
             kernel=kernel,
             name=agent_name,
             description="Summarizer agent that condenses information into concise summaries.",
-            instructions=load_prompt(agent_name)
+            instructions=cache_service.load_prompt(agent_name)
         )
 
         return summarizer_agent
@@ -329,3 +323,6 @@ class AgentFactory:
             return self.agents["microsoft_docs"]
         else:
             return self.agents["orchestrator"]
+
+# Global instance
+agent_factory = AgentFactory()

@@ -86,3 +86,6 @@ class ChatService:
                 actions.append(action)
 
         return actions
+
+# Global instance
+chat_service = ChatService()
