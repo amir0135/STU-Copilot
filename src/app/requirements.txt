@@ -6,3 +6,6 @@ azure-cosmos
 azure-storage-blob
 azure-ai-projects
 azure-identity
+asyncpg
+sqlalchemy
+greenlet

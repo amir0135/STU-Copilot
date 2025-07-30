@@ -2,14 +2,9 @@ import os
 from azure.cosmos import CosmosClient, PartitionKey, exceptions, ContainerProxy, CosmosDict
 from .foundry_service import FoundryService
 from dotenv import load_dotenv
-import logging
 
 # Load environment variables from .env file
 load_dotenv(override=True)
-
-# Configure logging
-logging.basicConfig(level=logging.CRITICAL)
-logger = logging.getLogger(__name__)
 
 
 class CosmosDBService:

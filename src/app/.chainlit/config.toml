@@ -46,9 +46,10 @@ edit_message = true
     # 3. For specific file extensions:
     #    accept = { "application/octet-stream" = [".xyz", ".pdb"] }
     # Note: Using "*/*" is not recommended as it may cause browser warnings
-    accept = ["*/*"]
-    max_files = 20
-    max_size_mb = 500
+    # accept = ["*/*"]
+    accept = ["image/jpeg", "image/png", "application/pdf"]
+    max_files = 5
+    max_size_mb = 50
 
 [features.audio]
     # Sample rate of the audio
@@ -71,7 +72,7 @@ custom_css = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.
 
 # default_theme = "dark"
 
-#layout = "wide"
+layout = "wide"
 
 # default_sidebar_state = "open"
 

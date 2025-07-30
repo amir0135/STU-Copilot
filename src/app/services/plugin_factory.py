@@ -6,12 +6,8 @@ from azure.identity.aio import DefaultAzureCredential
 from semantic_kernel.agents import AzureAIAgent
 import chainlit as cl
 from .cosmos_db_service import CosmosDBService
-import logging
 import json
 
-# Basic logging configuration
-logging.basicConfig(level=logging.CRITICAL)
-logger = logging.getLogger(__name__)
 
 # Initialize CosmosDBService
 cosmos_db_service = CosmosDBService()
@@ -57,13 +53,14 @@ class MicrosoftDocsPlugin:
             url="https://learn.microsoft.com/api/mcp",
             request_timeout=15
         ) as plugin:
-            response: list[TextContent] = await plugin.call_tool("microsoft_docs_search", question=input)            
+            response: list[TextContent] = await plugin.call_tool("microsoft_docs_search", question=input)
             # Now process the first item as before
             text = response[0].inner_content.text
             json_data = json.loads(text)
             contents = [item["content"] for item in json_data]
         # <-- context manager closes here, after all items are buffered
         return "----".join(contents)
+
 
 class BlogPostsPlugin:
     """A plugin to search blog posts."""
