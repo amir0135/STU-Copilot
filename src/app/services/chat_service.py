@@ -4,10 +4,7 @@ from typing import Optional, List
 
 class ChatService:
     """Service for managing chat agents and plugins."""
-
-    def __init__(self):
-        pass
-
+        
     def get_welcome_message(self, user_first_name: str, user_job_title: Optional[str] = None) -> str:
         """Returns the welcome message to the user."""
 
