@@ -55,8 +55,9 @@ class MicrosoftDocsPlugin:
         async with MCPStreamableHttpPlugin(
             name="Microsoft Documentation Search",
             url="https://learn.microsoft.com/api/mcp",
+            request_timeout=15
         ) as plugin:
-            response = await plugin.call_tool("microsoft_docs_search", question=input)            
+            response: list[TextContent] = await plugin.call_tool("microsoft_docs_search", question=input)            
             # Now process the first item as before
             text = response[0].inner_content.text
             json_data = json.loads(text)
