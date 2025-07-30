@@ -141,6 +141,11 @@ async def on_message(user_message: cl.Message):
     await answer.send()
 
 
+@cl.on_chat_resume
+async def on_chat_resume(thread):
+    pass
+
+
 @cl.set_starters  # type: ignore
 async def set_starts() -> List[cl.Starter]:
     return [
