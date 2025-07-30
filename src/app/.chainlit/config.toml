@@ -36,7 +36,7 @@ edit_message = true
 
 # Authorize users to spontaneously upload files with messages
 [features.spontaneous_file_upload]
-    enabled = true
+    enabled = false
     # Define accepted file types using MIME types
     # Examples:
     # 1. For specific file types:
@@ -71,12 +71,12 @@ custom_css = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.
 
 # default_theme = "dark"
 
-# layout = "wide"
+#layout = "wide"
 
 # default_sidebar_state = "open"
 
 # Description of the assistant. This is used for HTML tags.
-# description = ""
+description = "STU Copilot - Your AI-powered technical sales assistant"
 
 # Chain of Thought (CoT) display mode. Can be "hidden", "tool_call" or "full".
 cot = "full"
@@ -118,4 +118,4 @@ login_page_image = "/public/logo_light.png"
 #     url = "https://github.com/Chainlit/chainlit/issues"
 
 [meta]
-generated_by = "2.5.5"
+generated_by = "2.6.3"

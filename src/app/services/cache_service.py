@@ -14,7 +14,7 @@ for prompt_path in glob(os.path.join(PROMPTS_DIR, "*.prompty")):
     prompt_name = os.path.splitext(os.path.basename(prompt_path))[0]
     with open(prompt_path, "r", encoding="utf-8") as f:
         PROMPT_CACHE[prompt_name] = f.read()
-        logger.info(f"Loaded prompt into cache for: {prompt_name} ")
+logger.info("Loaded prompts into cache.")
 
 
 def load_prompt(prompt_name: str) -> str:
