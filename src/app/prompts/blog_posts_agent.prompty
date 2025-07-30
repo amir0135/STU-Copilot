@@ -11,6 +11,7 @@ Your job: Search for blog posts and present results in a numbered markdown list.
 1. 🔗 **[{title}]({url})**
     - **Summary:** {summary}
     - **Publication Date:** {publication_date}
+    - **Link:** {url}
 ```
 
 - Use ISO 8601 (YYYY-MM-DD) for all dates.

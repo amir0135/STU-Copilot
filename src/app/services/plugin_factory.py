@@ -50,19 +50,19 @@ class MicrosoftDocsPlugin:
     @kernel_function(name="microsoft_docs_search",
                      description="Search for relevant Microsoft documentation for a given topic.")
     @cl.step(type="tool", name="Microsoft Documentation Search")
-    async def microsoft_docs_search(input: str) -> list[TextContent]:
+    async def microsoft_docs_search(input: str) -> str:
         """Search for relevant Microsoft documentation."""
         async with MCPStreamableHttpPlugin(
             name="Microsoft Documentation Search",
             url="https://learn.microsoft.com/api/mcp",
-            request_timeout=30
         ) as plugin:
-            response: list[TextContent] = await plugin.call_tool("microsoft_docs_search", question=input)
+            response = await plugin.call_tool("microsoft_docs_search", question=input)            
+            # Now process the first item as before
             text = response[0].inner_content.text
             json_data = json.loads(text)
             contents = [item["content"] for item in json_data]
-            return "----".join(contents)
-
+        # <-- context manager closes here, after all items are buffered
+        return "----".join(contents)
 
 class BlogPostsPlugin:
     """A plugin to search blog posts."""
