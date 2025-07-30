@@ -17,6 +17,7 @@ class AppInsightsService:
         self.tracer = None
         self.meter = None
         self.is_configured = False
+        self.is_logging_instrumented = False
 
         if self.connection_string:
             self._configure_telemetry()
@@ -38,7 +39,9 @@ class AppInsightsService:
             self.meter = metrics.get_meter(__name__)
 
             # Configure automatic instrumentation
-            LoggingInstrumentor().instrument(set_logging_format=True)
+            if not self.is_logging_instrumented:
+                LoggingInstrumentor().instrument(set_logging_format=True)
+                self.is_logging_instrumented = True
             RequestsInstrumentor().instrument()
             URLLib3Instrumentor().instrument()
 

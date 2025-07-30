@@ -8,7 +8,4 @@ azure-ai-projects
 azure-identity
 asyncpg
 psycopg2
-sqlalchemy
-greenlet
-opencensus-ext-azure
 azure-monitor-opentelemetry
