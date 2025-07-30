@@ -97,8 +97,6 @@ async def on_chat_start():
 
 @cl.on_message
 async def on_message(user_message: cl.Message):
-    user_id: str = cl.user_session.get("user_id")
-    user_job_title: str = cl.user_session.get("job_title")
     chat_service: ChatService = cl.user_session.get("chat_service")
     chat_history: ChatHistory = cl.user_session.get("chat_history")
     chat_thread: ChatHistoryAgentThread = cl.user_session.get("chat_thread")
@@ -118,16 +116,12 @@ async def on_message(user_message: cl.Message):
     chat_history.add_user_message(user_message.content)
     answer = cl.Message(content="", actions=agent_actions)
 
-    chat_service.persist_chat_message(user_message, user_id)
-
     # Select which messages to send to the agent
     messages = chat_history if responder_agent in [
         agents["orchestrator"],
         agents["questioner"],
         agents["planner"]
     ] else user_message.content
-
-    # print("Messages to agent:", messages)
 
     # Set the latest agent in the user session
     cl.user_session.set("latest_agent", responder_agent.name)
@@ -143,14 +137,8 @@ async def on_message(user_message: cl.Message):
     cl.user_session.set("chat_thread", token.thread)
     chat_history.add_assistant_message(answer.content)
 
-    chat_service.persist_chat_message(answer, user_id)
-
     # Send the final message
     await answer.send()
-
-    # Persist the chat thread if it is the first message
-    if (len(chat_history) == 3):
-        chat_service.persist_chat_thread(user_message, user_id, user_job_title)
 
 
 @cl.set_starters  # type: ignore
@@ -174,15 +162,12 @@ async def set_starts() -> List[cl.Starter]:
 @cl.action_callback("action_button")
 async def on_action_button(action: cl.Action):
     """Handle action button clicks."""
-    await on_message(cl.Message(
-        content=get_user_prompts(),
-        command=action.payload["command"]
-    ))
-
-
-def get_user_prompts() -> str:
-    """Extract user prompts from the chat history."""
     chat_history: ChatHistory = cl.user_session.get("chat_history")
-    return "\n".join(
+    user_prompts = "\n".join(
         [msg.content for msg in chat_history if msg.role == "user"]
     )
+
+    await on_message(cl.Message(
+        content=user_prompts,
+        command=action.payload["command"]
+    ))

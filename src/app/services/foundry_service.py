@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 # Configure logging
-logging.basicConfig(level=logging.CRITICAL)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 

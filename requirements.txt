@@ -10,3 +10,6 @@ feedparser
 azure-ai-projects
 azure-identity
 backoff
+asyncpg
+sqlalchemy
+greenlet

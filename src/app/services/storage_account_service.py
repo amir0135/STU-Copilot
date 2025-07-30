@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 class StorageAccountService:
     def __init__(self):
-        account_name = os.getenv("STORAGE_ACCOUNT_NAME")
-        account_key = os.getenv("STORAGE_ACCOUNT_KEY")
+        account_name = os.getenv("APP_AZURE_STORAGE_ACCOUNT")
+        account_key = os.getenv("APP_AZURE_STORAGE_ACCESS_KEY")
 
         if not account_name or not account_key:
             raise EnvironmentError(
