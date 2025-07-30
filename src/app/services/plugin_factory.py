@@ -5,12 +5,12 @@ from semantic_kernel.connectors.mcp import MCPStreamableHttpPlugin, TextContent
 from azure.identity.aio import DefaultAzureCredential
 from semantic_kernel.agents import AzureAIAgent
 import chainlit as cl
-from .cosmos_db_service import CosmosDBService
+from .cosmos_db_service import cosmos_db_service
 import json
 
 
 # Initialize CosmosDBService
-cosmos_db_service = CosmosDBService()
+
 
 ai_foundry_project_endpoint = os.getenv("AI_FOUNDRY_PROJECT_ENDPOINT")
 if not ai_foundry_project_endpoint:
@@ -119,3 +119,10 @@ async def get_ai_foundry_client():
         ) as client
     ):
         yield client
+
+# Global instances
+github_plugin = GitHubPlugin()
+microsoft_docs_plugin = MicrosoftDocsPlugin()
+blog_posts_plugin = BlogPostsPlugin()
+seismic_plugin = SeismicPlugin()
+bing_plugin = BingPlugin()

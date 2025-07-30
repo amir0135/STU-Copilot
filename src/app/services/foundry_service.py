@@ -139,3 +139,6 @@ class FoundryService:
         except Exception as e:
             logger.error(f"Error during text summarization: {e}")
             return ("", "")
+
+# Global instance
+foundry_service = FoundryService()

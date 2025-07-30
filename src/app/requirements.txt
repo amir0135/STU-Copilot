@@ -7,5 +7,5 @@ azure-storage-blob
 azure-ai-projects
 azure-identity
 asyncpg
-sqlalchemy
-greenlet
+psycopg2
+azure-monitor-opentelemetry

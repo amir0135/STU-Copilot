@@ -11,5 +11,5 @@ azure-ai-projects
 azure-identity
 backoff
 asyncpg
-sqlalchemy
-greenlet
+psycopg2
+azure-monitor-opentelemetry

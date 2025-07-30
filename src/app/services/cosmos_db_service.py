@@ -106,3 +106,6 @@ class CosmosDBService:
             populate_query_metrics=True)
 
         return list(response)
+
+# Global instance
+cosmos_db_service = CosmosDBService()
