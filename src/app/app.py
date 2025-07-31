@@ -135,7 +135,8 @@ async def on_message(user_message: cl.Message):
             chat_thread: ChatHistoryAgentThread = cl.user_session.get(
                 "chat_thread")
 
-            responder_agent: ChatCompletionAgent = agent_factory.select_responder_agent(
+            responder_agent: ChatCompletionAgent = chat_service.select_responder_agent(
+                agents=agents,                          
                 current_message=user_message,
                 chat_history=chat_history,
                 latest_agent_name=cl.user_session.get("latest_agent_name")

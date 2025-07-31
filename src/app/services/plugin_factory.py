@@ -2,16 +2,14 @@ import os
 from contextlib import asynccontextmanager
 from semantic_kernel.functions import kernel_function
 from semantic_kernel.connectors.mcp import MCPStreamableHttpPlugin, TextContent
+from semantic_kernel.contents import ChatMessageContent
 from azure.identity.aio import DefaultAzureCredential
 from semantic_kernel.agents import AzureAIAgent
 import chainlit as cl
 from .cosmos_db_service import cosmos_db_service
 import json
 
-
-# Initialize CosmosDBService
-
-
+# Environment variables for AI Foundry project endpoint and agent IDs
 ai_foundry_project_endpoint = os.getenv("AI_FOUNDRY_PROJECT_ENDPOINT")
 if not ai_foundry_project_endpoint:
     raise EnvironmentError(
@@ -21,6 +19,11 @@ bing_search_agent_id = os.getenv("BING_SEARCH_AGENT_ID")
 if not bing_search_agent_id:
     raise EnvironmentError(
         "BING_SEARCH_AGENT_ID environment variable is not set.")
+
+github_docs_search_agent_id = os.getenv("GITHUB_DOCS_SEARCH_AGENT_ID")
+if not github_docs_search_agent_id:
+    raise EnvironmentError(
+        "GITHUB_DOCS_SEARCH_AGENT_ID environment variable is not set.")
 
 
 class GitHubPlugin:
@@ -38,6 +41,21 @@ class GitHubPlugin:
                     "stars_count", "archived", "updated_at"],
             top_count=5)
         return results
+
+    @kernel_function(name="github_docs_search",
+                     description="Search for relevant GitHub documentation for a given topic.")
+    @cl.step(type="tool", name="GitHub Documentation Search")
+    async def github_docs_search(input: str) -> list:
+        """Search for relevant GitHub documentation."""
+        async with get_ai_foundry_client() as client:
+            agent_definition = await client.agents.get_agent(agent_id=github_docs_search_agent_id)
+            agent = AzureAIAgent(client=client, definition=agent_definition)
+            structured_message: ChatMessageContent = ChatMessageContent(
+                role="user",
+                content=input
+            )
+            response = await agent.get_response(messages=[structured_message])
+            return response.items
 
 
 class MicrosoftDocsPlugin:
@@ -105,7 +123,11 @@ class BingPlugin:
         async with get_ai_foundry_client() as client:
             agent_definition = await client.agents.get_agent(agent_id=bing_search_agent_id)
             agent = AzureAIAgent(client=client, definition=agent_definition)
-            response = await agent.get_response(messages=[input])
+            structured_message: ChatMessageContent = ChatMessageContent(
+                role="user",
+                content=input
+            )
+            response = await agent.get_response(messages=[structured_message])
             return response.items
 
 
