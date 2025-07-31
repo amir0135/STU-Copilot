@@ -1,7 +1,6 @@
 import os
 from semantic_kernel import Kernel
 from semantic_kernel.agents import ChatCompletionAgent
-from semantic_kernel.contents import ChatHistory
 from semantic_kernel.connectors.ai import FunctionChoiceBehavior
 from semantic_kernel.connectors.ai.open_ai import (
     AzureChatCompletion,
@@ -13,7 +12,7 @@ from .plugin_factory import (
     seismic_plugin, bing_plugin
 )
 import logging
-import chainlit as cl
+
 
 # Configure logging
 logging.basicConfig(level=logging.CRITICAL)
@@ -28,12 +27,13 @@ class AgentFactory:
         api_key = os.getenv("AI_FOUNDRY_KEY")
         if not endpoint or not api_key:
             raise EnvironmentError(
-                "Missing Azure Open AI endpoint or API key.")        
+                "Missing Azure Open AI endpoint or API key.")
 
         self.agents = {
             "questioner": self.get_questioner_agent(),
             "planner": self.get_planner_agent(),
             "github": self.get_github_agent(),
+            "github_docs_search": self.get_github_docs_search_agent(),
             "microsoft_docs": self.get_microsoft_docs_agent(),
             "blog_posts": self.get_blog_posts_agent(),
             "seismic": self.get_seismic_agent(),
@@ -84,6 +84,7 @@ class AgentFactory:
                 self.agents["questioner"],
                 self.agents["microsoft_docs"],
                 self.agents["github"],
+                self.agents["github_docs_search"],
                 self.agents["blog_posts"],
                 self.agents["seismic"],
                 self.agents["bing_search"],
@@ -172,7 +173,7 @@ class AgentFactory:
             name=agent_name,
             description="Microsoft Docs agent that fetches relevant documentation from Microsoft Docs.",
             instructions=cache_service.load_prompt(agent_name),
-            plugins=[microsoft_docs_plugin.microsoft_docs_search]            
+            plugins=[microsoft_docs_plugin.microsoft_docs_search]
         )
 
         return microsoft_docs_agent
@@ -243,6 +244,31 @@ class AgentFactory:
 
         return bing_search_agent
 
+    def get_github_docs_search_agent(self) -> ChatCompletionAgent:
+        """Create a GitHub Docs Search agent with the necessary plugins."""
+        agent_name = "github_docs_search_agent"
+        model_name = "gpt-4.1-mini"
+
+        # Clone the base kernel and add the OpenAI service
+        kernel = self.create_kernel(
+            agent_name=agent_name,
+            model_name=model_name
+        )
+
+        # Create the agent
+        github_docs_search_agent = ChatCompletionAgent(
+            kernel=kernel,
+            name=agent_name,
+            description="GitHub Docs Search agent that performs searches to find relevant documentation.",
+            instructions=cache_service.load_prompt(agent_name),
+            plugins=[github_plugin.github_docs_search]
+        )
+
+        return github_docs_search_agent
+
+
+    
+
     def get_architect_agent(self) -> ChatCompletionAgent:
         """Create an architect agent with the necessary plugins."""
         agent_name = "architect_agent"
@@ -266,7 +292,7 @@ class AgentFactory:
         )
 
         return architect_agent
-    
+
     def get_summarizer_agent(self) -> ChatCompletionAgent:
         """Create a summarizer agent with the necessary plugins."""
         agent_name = "summarizer_agent"
@@ -294,35 +320,7 @@ class AgentFactory:
         return OpenAIChatPromptExecutionSettings(
             function_choice_behavior=FunctionChoiceBehavior.Auto()
         )
-        
-    def select_responder_agent(self, current_message: cl.Message,
-                           chat_history: ChatHistory,
-                           latest_agent_name: str) -> ChatCompletionAgent:
-        """Select the appropriate agent based on the current message and chat history."""
 
-        print(f"Current message command: {current_message.command}")
-        print(f"Chat history length: {len(chat_history)}")
-        print(f"Latest agent in use: {latest_agent_name}")
-
-        # If the current message is a command, use the corresponding agent
-        if current_message.command:
-            # Handle command messages using dictionary mapping
-            command_agent_map = {
-                "GitHub": self.agents["github"],
-                "Microsoft Docs": self.agents["microsoft_docs"],
-                "Seismic Presentations": self.agents["seismic"],
-                "Blog Posts": self.agents["blog_posts"],
-                "Bing Search": self.agents["bing_search"],
-            }
-            return command_agent_map.get(current_message.command)
-
-        # If the current message is not a command, determine the agent based on the chat history
-        elif latest_agent_name is None:
-            return self.agents["questioner"]
-        elif latest_agent_name == "questioner_agent":
-            return self.agents["microsoft_docs"]
-        else:
-            return self.agents["orchestrator"]
 
 # Global instance
 agent_factory = AgentFactory()

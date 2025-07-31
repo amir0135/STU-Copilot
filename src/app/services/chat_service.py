@@ -1,10 +1,13 @@
 import chainlit as cl
 from typing import Optional, List
+from chainlit.types import CommandDict
+from semantic_kernel.agents import ChatCompletionAgent
+from semantic_kernel.contents import ChatHistory
 
 
 class ChatService:
     """Service for managing chat agents and plugins."""
-        
+
     def get_welcome_message(self, user_first_name: str, user_job_title: Optional[str] = None) -> str:
         """Returns the welcome message to the user."""
 
@@ -17,19 +20,25 @@ class ChatService:
 
         return welcome_message
 
-    def get_commands(self) -> list:
+    def get_commands(self) -> list[CommandDict]:
         """Return the list of available commands."""
 
         return [
-            {
-                "id": "GitHub",
-                "icon": "github",
-                "description": "Search for GitHub repositories"
-            },
+
             {
                 "id": "Microsoft Docs",
                 "icon": "file-search",
                 "description": "Search Microsoft documentation"
+            },
+            {
+                "id": "GitHub Docs",
+                "icon": "file-search",
+                "description": "Search GitHub documentation"
+            },
+            {
+                "id": "GitHub",
+                "icon": "github",
+                "description": "Search for GitHub repositories"
             },
             {
                 "id": "Seismic Presentations",
@@ -57,9 +66,14 @@ class ChatService:
                           label="Search Microsoft Docs",
                           payload={"command": "Microsoft Docs"},
                           icon="file-search"),
+            "github_docs_search_agent":
+                cl.Action(name="action_button",
+                          label="Search GitHub Docs",
+                          payload={"command": "GitHub Docs"},
+                          icon="file-search"),
             "github_agent":
                 cl.Action(name="action_button",
-                          label="Search GitHub Repos",
+                          label="Search GitHub Repositories",
                           payload={"command": "GitHub"},
                           icon="github"),
             "seismic_agent":
@@ -86,6 +100,40 @@ class ChatService:
                 actions.append(action)
 
         return actions
+
+    def select_responder_agent(self,
+                               agents: dict[str, ChatCompletionAgent],
+                               current_message: cl.Message,
+                               chat_history: ChatHistory,
+                               latest_agent_name: str) -> ChatCompletionAgent:
+        """Select the appropriate agent based on the current message and chat history."""
+
+        print(f"Current message command: {current_message.command}")
+        print(f"Chat history length: {len(chat_history)}")
+        print(f"Latest agent in use: {latest_agent_name}")
+
+        # If the current message is a command, use the corresponding agent
+        if current_message.command:
+            # Handle command messages using dictionary mapping
+            command_agent_map = {
+                "Microsoft Docs": agents["microsoft_docs"],
+                "GitHub Docs": agents["github_docs_search"],
+                "GitHub": agents["github"],
+                "Seismic Presentations": agents["seismic"],
+                "Blog Posts": agents["blog_posts"],
+                "Bing Search": agents["bing_search"],
+            }
+            return command_agent_map.get(current_message.command)
+
+        # If the current message is not a command, determine the agent based on the chat history
+        elif latest_agent_name is None:
+            return agents["questioner"]
+        elif latest_agent_name == "questioner_agent":
+            return agents["microsoft_docs"]
+        else:
+            return agents["orchestrator"]
+
+
 
 # Global instance
 chat_service = ChatService()
