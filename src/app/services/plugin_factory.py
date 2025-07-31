@@ -2,6 +2,7 @@ import os
 from contextlib import asynccontextmanager
 from semantic_kernel.functions import kernel_function
 from semantic_kernel.connectors.mcp import MCPStreamableHttpPlugin, TextContent
+from semantic_kernel.contents import ChatMessageContent
 from azure.identity.aio import DefaultAzureCredential
 from semantic_kernel.agents import AzureAIAgent
 import chainlit as cl
@@ -49,7 +50,11 @@ class GitHubPlugin:
         async with get_ai_foundry_client() as client:
             agent_definition = await client.agents.get_agent(agent_id=github_docs_search_agent_id)
             agent = AzureAIAgent(client=client, definition=agent_definition)
-            response = await agent.get_response(messages=[input])
+            structured_message: ChatMessageContent = ChatMessageContent(
+                role="user",
+                content=input
+            )
+            response = await agent.get_response(messages=[structured_message])
             return response.items
 
 
@@ -118,7 +123,11 @@ class BingPlugin:
         async with get_ai_foundry_client() as client:
             agent_definition = await client.agents.get_agent(agent_id=bing_search_agent_id)
             agent = AzureAIAgent(client=client, definition=agent_definition)
-            response = await agent.get_response(messages=[input])
+            structured_message: ChatMessageContent = ChatMessageContent(
+                role="user",
+                content=input
+            )
+            response = await agent.get_response(messages=[structured_message])
             return response.items
 
 
