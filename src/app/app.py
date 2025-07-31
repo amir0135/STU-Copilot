@@ -10,7 +10,7 @@ import logging
 import socketio
 from engineio.payload import Payload
 import time
-
+from chainlit.types import ThreadDict
 
 # Set the buffer size to 10MB or use a configurable value from the environment
 MAX_HTTP_BUFFER_SIZE = int(os.getenv("MAX_HTTP_BUFFER_SIZE", 100_000_000))
@@ -158,10 +158,10 @@ async def on_message(user_message: cl.Message):
             answer = cl.Message(content="", actions=agent_actions)
 
             # Select which messages to send to the agent
-            messages = chat_history if responder_agent in [
-                agents["orchestrator"],
-                agents["questioner"],
-                agents["planner"]
+            messages = chat_history if responder_agent.name in [
+                "orchestrator_agent",
+                "questioner_agent",
+                "planner_agent"
             ] else user_message.content
 
             # Set the latest agent in the user session
@@ -205,13 +205,13 @@ async def on_message(user_message: cl.Message):
 
 
 @cl.on_chat_resume
-async def on_chat_resume(thread):
-    user = cl.user_session.get("user")
+async def on_chat_resume(thread: ThreadDict):
+    user: cl.User = cl.user_session.get("user")
     user_id = user.identifier if user else "anonymous"
 
     app_insights_service.track_event("chat_session_resume", {
         "user_id": user_id,
-        "thread_id": str(thread.id) if thread else "unknown"
+        "thread_id": str(thread.get("id")) if thread else "unknown"
     })
 
 

@@ -30,18 +30,18 @@ class AgentFactory:
                 "Missing Azure Open AI endpoint or API key.")
 
         self.agents = {
-            "questioner": self.get_questioner_agent(),
-            "planner": self.get_planner_agent(),
-            "github": self.get_github_agent(),
-            "github_docs_search": self.get_github_docs_search_agent(),
-            "microsoft_docs": self.get_microsoft_docs_agent(),
-            "blog_posts": self.get_blog_posts_agent(),
-            "seismic": self.get_seismic_agent(),
-            "bing_search": self.get_bing_search_agent(),
-            "architect": self.get_architect_agent(),
-            "summarizer": self.get_summarizer_agent(),
+            "questioner_agent": self.get_questioner_agent(),
+            "planner_agent": self.get_planner_agent(),
+            "github_agent": self.get_github_agent(),
+            "github_docs_search_agent": self.get_github_docs_search_agent(),
+            "microsoft_docs_agent": self.get_microsoft_docs_agent(),
+            "blog_posts_agent": self.get_blog_posts_agent(),
+            "seismic_agent": self.get_seismic_agent(),
+            "bing_search_agent": self.get_bing_search_agent(),
+            "architect_agent": self.get_architect_agent(),
+            "summarizer_agent": self.get_summarizer_agent(),
         }
-        self.agents["orchestrator"] = self.get_orchestrator_agent()
+        self.agents["orchestrator_agent"] = self.get_orchestrator_agent()
 
     def create_kernel(self,
                       agent_name: str,
@@ -81,13 +81,13 @@ class AgentFactory:
             description="Orchestrator agent that manages the workflow of other agents.",
             instructions=cache_service.load_prompt(agent_name),
             plugins=[
-                self.agents["questioner"],
-                self.agents["microsoft_docs"],
-                self.agents["github"],
-                self.agents["github_docs_search"],
-                self.agents["blog_posts"],
-                self.agents["seismic"],
-                self.agents["bing_search"],
+                self.agents.get("questioner_agent"),
+                self.agents.get("microsoft_docs_agent"),
+                self.agents.get("github_agent"),
+                self.agents.get("github_docs_search_agent"),
+                self.agents.get("blog_posts_agent"),
+                self.agents.get("seismic_agent"),
+                self.agents.get("bing_search_agent"),
             ]
         )
 

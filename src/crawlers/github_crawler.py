@@ -1,4 +1,5 @@
 
+import os
 import logging
 import time
 import requests
@@ -18,9 +19,9 @@ logger = logging.getLogger("azure.functions")
 # Organizations to crawl
 github_organizations = [
     "Azure-Samples",
-    "Microsoft",
-    "AzureCosmosDB",
-    "Azure"
+    #"Azure",
+    #"Microsoft",    
+    #"AzureCosmosDB"
 ]
 
 # CosmosDB configuration
@@ -44,15 +45,16 @@ class GitHubCrawler:
 
         # Fetch repositories for the organization in paginated manner
         page = 1
-        page_size = 10  # Increased page size for efficiency
+        page_size = 100  # Increased page size for efficiency
         org_repos: List[RepositoryInfo] = []
 
         headers = {
             'User-Agent': 'GitHubCrawler/1.0',
             'Accept': 'application/vnd.github.v3+json',
+            #'Authorization': f'token {os.getenv("GH_PAT")}'
         }
 
-        while page == 1:  # Pagination loop
+        while True:  # Pagination loop
             url = f"https://api.github.com/orgs/{organization}/repos?type=public&per_page={page_size}&page={page}"
             response = requests.get(url, headers=headers)
 
@@ -101,11 +103,11 @@ class GitHubCrawler:
                 f"Fetched {len(repos)} repositories from {organization} (Page {page})")
 
             page += 1
-            time.sleep(0.1)  # Rate limiting
+            time.sleep(0.2)  # Rate limiting
 
             # If we got fewer repos than the page size, we've reached the end
-            if len(repos) < page_size:
-                break
+            # if len(repos) < page_size:
+            #     break            
 
         return org_repos
 
