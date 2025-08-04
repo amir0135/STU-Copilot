@@ -40,7 +40,8 @@ class AgentFactory:
             "bing_search_agent": self.get_bing_search_agent(),
             "architect_agent": self.get_architect_agent(),
             "summarizer_agent": self.get_summarizer_agent(),
-            "aws_docs_agent": self.get_aws_docs_agent()
+            "aws_docs_agent": self.get_aws_docs_agent(),
+            "explainer_agent": self.get_explainer_agent(),
         }
         self.agents["orchestrator_agent"] = self.get_orchestrator_agent()
 
@@ -90,6 +91,7 @@ class AgentFactory:
                 self.agents.get("seismic_agent"),
                 self.agents.get("bing_search_agent"),
                 self.agents.get("aws_docs_agent"),
+                self.agents.get("explainer_agent"),
             ]
         )
 
@@ -334,6 +336,27 @@ class AgentFactory:
         )
 
         return summarizer_agent
+    
+    def get_explainer_agent(self) -> ChatCompletionAgent:
+        """Create an explainer agent with the necessary plugins."""
+        agent_name = "explainer_agent"
+        model_name = "gpt-4.1"
+
+        # Clone the base kernel and add the OpenAI service
+        kernel = self.create_kernel(
+            agent_name=agent_name,
+            model_name=model_name
+        )
+
+        # Create the agent
+        explainer_agent = ChatCompletionAgent(
+            kernel=kernel,
+            name=agent_name,
+            description="Explainer agent that provides detailed explanations of concepts.",
+            instructions=cache_service.load_prompt(agent_name)
+        )
+
+        return explainer_agent
 
     @staticmethod
     def execution_settings() -> OpenAIChatPromptExecutionSettings:
