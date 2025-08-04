@@ -96,6 +96,18 @@ class ChatService:
                 "command": "AWS Documentation",
                 "action_name": "action_button",
                 "agent_object": agents.get("aws_docs_agent")
+            },
+            "explainer_agent": {
+                "title": "Explainer",
+                "description": "Explain concepts in Layman's terms",
+                "icon": "info",
+                "is_button": False,
+                "is_persistent": False,
+                "is_command": True,
+                "is_action": True,
+                "command": "Explainer",
+                "action_name": "action_button",
+                "agent_object": agents.get("explainer_agent")
             }
         }
 
@@ -167,6 +179,8 @@ class ChatService:
             return agents.get("questioner_agent")
         elif latest_agent_name == "questioner_agent":
             return agents.get("microsoft_docs_agent")
+        elif latest_agent_name == "explainer_agent":
+            return agents.get("explainer_agent")
         else:
             return agents.get("orchestrator_agent")
 
