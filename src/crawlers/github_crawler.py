@@ -206,12 +206,7 @@ class GitHubCrawler:
         logger.info(
             f"Total repositories fetched for {organization}: {len(org_repos)}")
 
-        # Save org_repos to a JSON file
-        output_filename = f"{organization}_repos.json"
-        with open(output_filename, "w", encoding="utf-8") as f:
-            json.dump([repo.to_dict() for repo in org_repos], f, ensure_ascii=False, indent=2)
-        logger.info(f"Saved repository data to {output_filename}")
-
+        # Process each repository
         for repo in org_repos:
             self.process_repository(repo)
             time.sleep(0.1)  # Rate limiting
