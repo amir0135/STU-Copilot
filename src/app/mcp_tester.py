@@ -35,14 +35,27 @@ import chainlit as cl
 from semantic_kernel.agents import ChatCompletionAgent, ChatHistoryAgentThread
 from semantic_kernel.contents import ChatHistory
 from services.agent_factory import AgentFactory
-from semantic_kernel.connectors.mcp import MCPStdioPlugin, MCPSsePlugin
+from semantic_kernel.connectors.mcp import MCPStdioPlugin, MCPSsePlugin, MCPWebsocketPlugin, TextContent
 import logging
+import socketio
+from engineio.payload import Payload
+import os
 
 dotenv.load_dotenv(override=True)
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("openai").setLevel(logging.INFO)
 logging.getLogger("semantic_kernel").setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+# Set the buffer size to 10MB or use a configurable value from the environment
+MAX_HTTP_BUFFER_SIZE = int(os.getenv("MAX_HTTP_BUFFER_SIZE", 100_000_000))
+# Configurable buffer size
+sio = socketio.AsyncServer(
+    async_mode='aiohttp',
+    transport='websocket',
+    max_http_buffer_size=MAX_HTTP_BUFFER_SIZE)
+Payload.max_decode_packets = 500
 
 agent_factory = AgentFactory()
 agent_name = "orchestrator_agent"
@@ -69,20 +82,44 @@ async def on_message(user_message: cl.Message):
     chat_history.add_user_message(user_message.content)
     answer = cl.Message(content="")
 
-    async with MCPSsePlugin(
-        name="MS Docs",
-        description="MS Docs Plugin",
-        url="https://learn.microsoft.com/api/mcp",
-        request_timeout=60
-    ) as ms_docs_plugin:
+    async with MCPStdioPlugin(
+        name="AWS Docs",
+        description="AWS Docs Search",
+        command="docker",
+        args=[
+            "run",
+            "--rm",
+            "--interactive",
+            "--env",
+            "FASTMCP_LOG_LEVEL=ERROR",
+            "--env",
+            "AWS_DOCUMENTATION_PARTITION=aws",
+            "mcp/aws-documentation:latest"
+        ],
+        env={},
+        request_timeout=30
+
+    ) as aws_docs_plugin:
+
+        # Call the tool with the input message
+        # responses: list[TextContent] = await aws_docs_plugin.call_tool("search_documentation", search_phrase=user_message.content, limit=5)
+        # result: str = ""
+        
+        # for response in responses:
+        #     result += f"\n\n {response.inner_content.text}"
+
+        # answer.content = str(result)
 
         # Create the agent
         agent = ChatCompletionAgent(
             kernel=kernel,
             name=agent_name,
-            instructions="Answer the user's question using the available plugins.",
+            instructions=("Answer the user's question using the available plugins."
+                          "Use the 'search_documentation' tool to search for AWS documentation."
+                          "Pass 'search_phrase' as the input to the tool."
+                          "Pass 'limit' as 5 to the tool."),
             plugins=[
-                ms_docs_plugin
+                aws_docs_plugin
             ]
         )
 

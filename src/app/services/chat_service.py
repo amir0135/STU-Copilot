@@ -84,6 +84,18 @@ class ChatService:
                 "command": "Bing Search",
                 "action_name": "action_button",
                 "agent_object": agents.get("bing_search_agent")
+            },
+            "aws_docs_agent": {
+                "title": "AWS Documentation",
+                "description": "Search AWS documentation",
+                "icon": "file-search",
+                "is_button": False,
+                "is_persistent": False,
+                "is_command": True,
+                "is_action": True,
+                "command": "AWS Documentation",
+                "action_name": "action_button",
+                "agent_object": agents.get("aws_docs_agent")
             }
         }
 

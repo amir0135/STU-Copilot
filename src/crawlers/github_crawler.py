@@ -7,6 +7,7 @@ from typing import List
 from data_models import RepositoryInfo
 from cosmos_db_service import CosmosDBService
 from foundry_service import FoundryService
+import json
 
 
 # Configure logging
@@ -18,8 +19,8 @@ logger = logging.getLogger("azure.functions")
 
 # Organizations to crawl
 github_organizations = [
-    "Azure-Samples",
-    #"Azure",
+    #"Azure-Samples",
+    "Azure",
     #"Microsoft",    
     #"AzureCosmosDB"
 ]
@@ -103,7 +104,7 @@ class GitHubCrawler:
                 f"Fetched {len(repos)} repositories from {organization} (Page {page})")
 
             page += 1
-            time.sleep(0.2)  # Rate limiting
+            time.sleep(0.5)  # Rate limiting
 
             # If we got fewer repos than the page size, we've reached the end
             # if len(repos) < page_size:
@@ -183,14 +184,33 @@ class GitHubCrawler:
         logger.info(f"Starting crawl for organization: {organization}")
 
         # Fetch repositories for the organization
-        org_repos = self.fetch_org_repositories(organization)
-        if not org_repos:
-            logger.info(
-                f"No repositories found for organization: {organization}")
-            return
+        # org_repos = self.fetch_org_repositories(organization)
+        # if not org_repos:
+        #     logger.info(
+        #         f"No repositories found for organization: {organization}")
+        #     return
+        
+        # Save org_repos to a JSON file
+        # output_filename = f"{organization}_repos.json"
+        # with open(output_filename, "w", encoding="utf-8") as f:
+        #     json.dump([repo.to_dict() for repo in org_repos], f, ensure_ascii=False, indent=2)
+        # logger.info(f"Saved repository data to {output_filename}")
+
+        # Load org_repos from a JSON file        
+        json_filename = f"{organization}_repos.json"
+        with open(json_filename, "r", encoding="utf-8") as f:
+            repo_dicts = json.load(f)
+            org_repos = [RepositoryInfo(**repo_dict) for repo_dict in repo_dicts]
+        logger.info(f"Loaded {len(org_repos)} repositories from {json_filename}")
 
         logger.info(
             f"Total repositories fetched for {organization}: {len(org_repos)}")
+
+        # Save org_repos to a JSON file
+        output_filename = f"{organization}_repos.json"
+        with open(output_filename, "w", encoding="utf-8") as f:
+            json.dump([repo.to_dict() for repo in org_repos], f, ensure_ascii=False, indent=2)
+        logger.info(f"Saved repository data to {output_filename}")
 
         for repo in org_repos:
             self.process_repository(repo)

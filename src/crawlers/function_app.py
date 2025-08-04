@@ -19,7 +19,7 @@ foundry_service = FoundryService()
 
 @app.timer_trigger(schedule="0 0 0 * * *",  # Run every 1 day
                    arg_name="timer_request",
-                   run_on_startup=True,
+                   run_on_startup=False,
                    use_monitor=False)
 def github_crawler_func(timer_request: func.TimerRequest) -> None:
     logger.info('GitHub crawler function started.')
@@ -32,7 +32,7 @@ def github_crawler_func(timer_request: func.TimerRequest) -> None:
 
 @app.timer_trigger(schedule="0 0 0 * * *",  # Run every 1 day
                    arg_name="timer_request",
-                   run_on_startup=False,
+                   run_on_startup=True,
                    use_monitor=False)
 def blogs_crawler_func(timer_request: func.TimerRequest) -> None:
     logger.info('Blogs crawler function started.')
