@@ -1,7 +1,7 @@
 import os
 from contextlib import asynccontextmanager
 from semantic_kernel.functions import kernel_function
-from semantic_kernel.connectors.mcp import MCPStreamableHttpPlugin, TextContent
+from semantic_kernel.connectors.mcp import MCPStreamableHttpPlugin, TextContent, MCPStdioPlugin
 from semantic_kernel.contents import ChatMessageContent
 from azure.identity.aio import DefaultAzureCredential
 from semantic_kernel.agents import AzureAIAgent
@@ -39,7 +39,7 @@ class GitHubPlugin:
             container_name="github-repos",
             fields=["name", "url", "description",
                     "stars_count", "archived", "updated_at"],
-            top_count=5)
+            top_count=10)
         return results
 
     @kernel_function(name="github_docs_search",
@@ -71,13 +71,27 @@ class MicrosoftDocsPlugin:
             url="https://learn.microsoft.com/api/mcp",
             request_timeout=15
         ) as plugin:
-            response: list[TextContent] = await plugin.call_tool("microsoft_docs_search", question=input)
+            contents = []
+            response: list[TextContent] = await plugin.call_tool(
+                "microsoft_docs_search",
+                query=input)            
             # Now process the first item as before
-            text = response[0].inner_content.text
-            json_data = json.loads(text)
-            contents = [item["content"] for item in json_data]
+            for item in response:
+                if isinstance(item, TextContent):
+                    data = json.loads(item.text)
+                    contents.append({
+                        "url": data["url"],
+                        "title": data["title"],
+                        "context": data["context"]
+                    })
+                else:
+                    contents.append({
+                        "url": "",
+                        "title": "Invalid content type received from Microsoft Docs plugin.",
+                        "context": ""
+                    })
         # <-- context manager closes here, after all items are buffered
-        return "----".join(contents)
+        return json.dumps(contents, indent=2)
 
 
 class BlogPostsPlugin:
@@ -131,6 +145,55 @@ class BingPlugin:
             return response.items
 
 
+class AWSDocsPlugin:
+    """A plugin to search AWS documentation."""
+
+    @kernel_function(name="aws_docs_search",
+                     description="Search for relevant AWS documentation for a given topic.")
+    @cl.step(type="tool", name="AWS Documentation Search")
+    async def aws_docs_search(input: str) -> str:
+        """Search for relevant AWS documentation."""
+        async with MCPStdioPlugin(
+            name="AWS Docs",
+            description="AWS Docs Search",
+            command="docker",
+            args=[
+                "run",
+                "--rm",
+                "--interactive",
+                "--env",
+                "FASTMCP_LOG_LEVEL=ERROR",
+                "--env",
+                "AWS_DOCUMENTATION_PARTITION=aws",
+                "mcp/aws-documentation:latest"
+            ],
+            env={},
+            request_timeout=30
+
+        ) as aws_docs_plugin:
+            contents = []
+            response: list[TextContent] = await aws_docs_plugin.call_tool(
+                tool_name="search_documentation",
+                search_phrase=input,
+                limit=5)
+            for item in response:
+                if isinstance(item, TextContent):
+                    data = json.loads(item.text)
+                    contents.append({
+                        "url": data["url"],
+                        "title": data["title"],
+                        "context": data["context"]
+                    })
+                else:
+                    contents.append({
+                        "url": "",
+                        "title": "Invalid content type received from AWS Docs plugin.",
+                        "context": ""
+                    })
+        # <-- context manager closes here, after all items are buffered
+        return json.dumps(contents, indent=2)
+
+
 @asynccontextmanager
 async def get_ai_foundry_client():
     async with (
@@ -148,3 +211,4 @@ microsoft_docs_plugin = MicrosoftDocsPlugin()
 blog_posts_plugin = BlogPostsPlugin()
 seismic_plugin = SeismicPlugin()
 bing_plugin = BingPlugin()
+aws_docs_plugin = AWSDocsPlugin()
