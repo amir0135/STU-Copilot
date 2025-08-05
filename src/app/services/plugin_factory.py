@@ -75,8 +75,8 @@ class MicrosoftDocsPlugin:
             response: list[TextContent] = await plugin.call_tool(
                 "microsoft_docs_search",
                 query=input)
-            results = response[0].inner_content.text if response else []
-            if not isinstance(results, str):
+            results = response[0].inner_content.text if response else ""
+            if not isinstance(results, str) or not results:
                 return "Could not retrieve results from Microsoft Docs MCP Server."
 
             # Parse the JSON response
