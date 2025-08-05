@@ -66,32 +66,42 @@ class MicrosoftDocsPlugin:
     @cl.step(type="tool", name="Microsoft Documentation Search")
     async def microsoft_docs_search(input: str) -> str:
         """Search for relevant Microsoft documentation."""
+
         async with MCPStreamableHttpPlugin(
             name="Microsoft Documentation Search",
             url="https://learn.microsoft.com/api/mcp",
             request_timeout=15
         ) as plugin:
-            contents = []
             response: list[TextContent] = await plugin.call_tool(
                 "microsoft_docs_search",
-                query=input)            
-            # Now process the first item as before
-            for item in response:
-                if isinstance(item, TextContent):
-                    data = json.loads(item.text)
-                    contents.append({
-                        "url": data["url"],
-                        "title": data["title"],
-                        "context": data["context"]
-                    })
+                query=input)
+            results = response[0].inner_content.text if response else []
+            if not isinstance(results, str):
+                return "Could not retrieve results from Microsoft Docs MCP Server."
+
+            # Parse the JSON response
+            data = json.loads(results)
+
+            aggregated = {}
+
+            for item in data:
+                title = item["title"]
+                content = item["content"]
+                heading = f"# {title}\n"
+                # Remove the heading from the content if it exists
+                if content.startswith(heading):
+                    content = content[len(heading):]
+                if title in aggregated:
+                    aggregated[title].append(content)
                 else:
-                    contents.append({
-                        "url": "",
-                        "title": "Invalid content type received from Microsoft Docs plugin.",
-                        "context": ""
-                    })
-        # <-- context manager closes here, after all items are buffered
-        return json.dumps(contents, indent=2)
+                    aggregated[title] = [content]
+
+            aggregated_results = [
+                {"title": title, "content": "\n\n".join(contents)}
+                for title, contents in aggregated.items()
+            ]
+
+        return json.dumps(aggregated_results, indent=2, ensure_ascii=False)
 
 
 class BlogPostsPlugin:
