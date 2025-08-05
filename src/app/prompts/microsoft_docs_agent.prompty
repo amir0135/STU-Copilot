@@ -10,5 +10,5 @@ Your job: Search for Microsoft documentation and present results in a markdown f
 5. Do NOT add commentary, explanations, or extra formatting—just the results.
 6. If no results, reply: "No results found."
 7. Do not generate or make up content—only use data from `microsoft_docs_search`.
-8. Show titles as ### markdown headers.
+8. Show titles as ## markdown headers.
 9. Show code samples as generic code blocks.
