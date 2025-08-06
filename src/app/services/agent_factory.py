@@ -23,9 +23,9 @@ class AgentFactory:
     """Factory for creating chat completion agents."""
 
     def __init__(self):
-        endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-        api_key = os.getenv("AI_FOUNDRY_KEY")
-        if not endpoint or not api_key:
+        self.endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+        self.api_key = os.getenv("AI_FOUNDRY_KEY")
+        if not self.endpoint or not self.api_key:
             raise EnvironmentError(
                 "Missing Azure Open AI endpoint or API key.")
 
@@ -54,6 +54,8 @@ class AgentFactory:
         kernel.add_service(
             AzureChatCompletion(
                 deployment_name=model_name,
+                endpoint=self.endpoint,
+                api_key=self.api_key,
                 service_id=agent_name,
                 api_version=api_version)
         )

@@ -7,5 +7,5 @@ azure-storage-blob
 azure-ai-projects
 azure-identity
 asyncpg
-psycopg2
+psycopg2-binary
 azure-monitor-opentelemetry
