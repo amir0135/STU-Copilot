@@ -17,7 +17,7 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/stu-copilot-app
+  IMAGE_NAME: hosseinzahed/stu-copilot/stu-copilot-app
 
 jobs:
   check-changes:
