@@ -10,12 +10,8 @@ COPY src/app/requirements.txt .
 # Install Python dependencies without caching
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application source code (excluding .env.example via .dockerignore)
+# Copy the application source code (excluding .env via .dockerignore)
 COPY src/app/ .
-
-# Copy environment variables file
-# Note: .env file contains sensitive data and should be handled securely in production
-COPY src/app/.env .env
 
 # Expose the default Chainlit port
 EXPOSE 8000

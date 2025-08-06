@@ -19,33 +19,16 @@ yarn-error.log
 # Ignore node_modules directory
 node_modules
 
-# Ignore build directories
-build
-dist
+# Ignore environment files
+.env
+.env.*
+!.env.example
 
-# Ignore environment variable files (except main .env)
-.env.example
-**/.env.example
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Ignore sensitive files
+**/.env
+**/secrets.*
 
-# Ignore coverage directory
-coverage
-
-# Ignore logs
-logs
-*.log
-
-# Ignore temporary files
-tmp
-temp
-*.tmp
-*.temp
-
-# Ignore IDE specific files
-.vscode
-.idea
-*.swp
-*.swo
+# Ignore Python cache
+__pycache__
+*.pyc
+*.pyo
