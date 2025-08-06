@@ -92,7 +92,7 @@ jobs:
 
   build-docker-image:
     needs: build-and-test
-    if: ${{ needs.check-changes.outputs.src-changed == 'true' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ (needs.check-changes.outputs.src-changed == 'true' || github.event_name == 'workflow_dispatch') && github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
 
     steps:
