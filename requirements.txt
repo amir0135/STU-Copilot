@@ -11,5 +11,5 @@ azure-ai-projects
 azure-identity
 backoff
 asyncpg
-psycopg2
+psycopg2-binary
 azure-monitor-opentelemetry
