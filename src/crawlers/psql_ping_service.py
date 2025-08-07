@@ -1,10 +1,5 @@
 import os
-from dotenv import load_dotenv
 import psycopg2
-
-# Load environment variables from .env file
-load_dotenv(override=True)
-
 
 class PostgresPingService:
     """Service to ping PostgreSQL database"""
