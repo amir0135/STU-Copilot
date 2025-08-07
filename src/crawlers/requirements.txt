@@ -1,6 +1,8 @@
 dotenv
 aiohttp
+azure-cosmos
 azure-storage-blob
 backoff
 openai
 feedparser
+psycopg2-binary
