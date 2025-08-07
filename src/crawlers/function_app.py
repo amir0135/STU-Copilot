@@ -1,3 +1,4 @@
+import os
 import azure.functions as func
 import logging
 from dotenv import load_dotenv
@@ -17,7 +18,7 @@ cosmos_db_service = CosmosDBService()
 foundry_service = FoundryService()
 
 
-@app.timer_trigger(schedule="0 0 0 * * *",  # Run every 1 day
+@app.timer_trigger(schedule="0 0 0 1 1 *",  # Run every 1 day
                    arg_name="timer_request",
                    run_on_startup=False,
                    use_monitor=False)
@@ -54,3 +55,14 @@ def seismic_crawler_func(timer_request: func.TimerRequest) -> None:
                                      foundry_service=foundry_service)
     seismic_crawler.run()
     logger.info('Seismic crawler function finished.')
+
+@app.timer_trigger(schedule="0 */5 * * * *", 
+                   arg_name="timer_request", 
+                   run_on_startup=True, 
+                   use_monitor=False) 
+def ping_psql_func(timer_request: func.TimerRequest) -> None:
+    if timer_request.past_due:
+        logging.info('The timer is past due!')
+    endpoint = os.environ.get('COSMOSDB_ENDPOINT')
+    logging.info(endpoint)
+    logging.info('Python timer trigger function executed.')
