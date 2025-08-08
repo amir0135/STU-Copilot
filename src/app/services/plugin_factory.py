@@ -45,7 +45,7 @@ class GitHubPlugin:
     @kernel_function(name="github_docs_search",
                      description="Search for relevant GitHub documentation for a given topic.")
     @cl.step(type="tool", name="GitHub Documentation Search")
-    async def github_docs_search(input: str) -> list:
+    async def github_docs_search(input: str) -> str:
         """Search for relevant GitHub documentation."""
         async with get_ai_foundry_client() as client:
             agent_definition = await client.agents.get_agent(agent_id=github_docs_search_agent_id)
@@ -54,8 +54,10 @@ class GitHubPlugin:
                 role="user",
                 content=input
             )
-            response = await agent.get_response(messages=[structured_message])
-            return response.items
+            response = await agent.get_response(messages=[structured_message])            
+            if not response:
+                return "Could not retrieve results from GitHub Docs Portal."
+            return response
 
 
 class MicrosoftDocsPlugin:
@@ -77,7 +79,7 @@ class MicrosoftDocsPlugin:
                 query=input)
             results = response[0].inner_content.text if response else ""
             if not isinstance(results, str) or not results:
-                return "Could not retrieve results from Microsoft Docs MCP Server."
+                return "Could not retrieve results from Microsoft Docs Portal."
 
             # Parse the JSON response
             data = json.loads(results)
@@ -142,7 +144,7 @@ class BingPlugin:
 
     @kernel_function(name="bing_search", description="Search Bing for a given query.")
     @cl.step(type="tool", name="Bing Search")
-    async def bing_search(input: str) -> list:
+    async def bing_search(input: str) -> str:
         """Perform a Bing search."""
         async with get_ai_foundry_client() as client:
             agent_definition = await client.agents.get_agent(agent_id=bing_search_agent_id)
@@ -152,7 +154,9 @@ class BingPlugin:
                 content=input
             )
             response = await agent.get_response(messages=[structured_message])
-            return response.items
+            if not response:
+                return "Could not retrieve results from Bing Search."
+            return response
 
 
 class AWSDocsPlugin:
@@ -197,7 +201,7 @@ class AWSDocsPlugin:
                 else:
                     contents.append({
                         "url": "",
-                        "title": "Invalid content type received from AWS Docs plugin.",
+                        "title": "Could not retrieve results from AWS Docs Portal.",
                         "context": ""
                     })
         # <-- context manager closes here, after all items are buffered

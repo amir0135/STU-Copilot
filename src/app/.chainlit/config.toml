@@ -119,4 +119,4 @@ login_page_image = "/public/logo_light.png"
 #     url = "https://github.com/Chainlit/chainlit/issues"
 
 [meta]
-generated_by = "2.6.5"
+generated_by = "2.6.7"
