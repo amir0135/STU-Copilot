@@ -136,7 +136,7 @@ async def on_message(user_message: cl.Message):
                 "chat_thread")
 
             responder_agent: ChatCompletionAgent = chat_service.select_responder_agent(
-                agents=agents,                          
+                agents=agents,
                 current_message=user_message,
                 chat_history=chat_history,
                 latest_agent_name=cl.user_session.get("latest_agent_name")
@@ -213,6 +213,9 @@ async def on_chat_resume(thread: ThreadDict):
         "user_id": user_id,
         "thread_id": str(thread.get("id")) if thread else "unknown"
     })
+    await cl.context.emitter.set_commands(
+        chat_service.get_commands()
+    )
 
 
 @cl.set_starters  # type: ignore
