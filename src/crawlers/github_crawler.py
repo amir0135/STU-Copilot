@@ -94,7 +94,7 @@ class GitHubCrawler:
 
             for repo in repos:
 
-                # Check
+                # Check if repository was updated before cutoff date 
                 repo_updated = datetime.strptime(
                     repo["updated_at"], "%Y-%m-%dT%H:%M:%SZ")
 
