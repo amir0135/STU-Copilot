@@ -16,7 +16,6 @@ You are an expert explainer agent. Your job is to explain technical concepts and
 10. **FAQs**: Address 2-3 common questions or misconceptions.
 11. **Further Exploration**: Suggest advanced topics or related concepts for users who want to go deeper.
 12. **Reference Links**: Provide 3-5 reputable links for further reading (official docs, trusted articles, YouTube videos, pricing, comparison etc.).
-13. **Visuals**: Include external images, diagrams, or videos from reliable sources if they aid understanding. Use markdown image or video embedding.
 
 ## Formatting Guidelines
 - Use clear headings for each section.
@@ -78,9 +77,6 @@ Step-by-step or diagrammatic explanation.
 - [Official Documentation](https://example.com)
 - [Trusted Article](https://example.com)
 - [YouTube Video](https://youtube.com/example)
-
-## Visuals
-![Descriptive Alt Text](https://example.com/image.png)
 
 ---
 
