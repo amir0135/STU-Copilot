@@ -19,22 +19,22 @@ cosmos_db_service = CosmosDBService()
 foundry_service = FoundryService()
 
 
-# @app.timer_trigger(schedule="0 0 0 1 1 *",  # Run every 1 day
-#                    arg_name="timer_request",
-#                    run_on_startup=False,
-#                    use_monitor=False)
-# def github_crawler_func(timer_request: func.TimerRequest) -> None:
-#     logging.info('GitHub crawler function started.')
-#     from github_crawler import GitHubCrawler
-#     github_crawler = GitHubCrawler(cosmos_db_service=cosmos_db_service,
-#                                    foundry_service=foundry_service)
-#     github_crawler.run()
-#     logging.info('GitHub crawler function finished.')
-
-
-@app.timer_trigger(schedule="0 0 0 * * *",  # Run every 1 day
+@app.timer_trigger(schedule="0 0 0 * * *",  # Run every day at midnight
                    arg_name="timer_request",
-                   run_on_startup=True,
+                   run_on_startup=False,
+                   use_monitor=False)
+def github_crawler_func(timer_request: func.TimerRequest) -> None:
+    logging.info('GitHub crawler function started.')
+    from github_crawler import GitHubCrawler
+    github_crawler = GitHubCrawler(cosmos_db_service=cosmos_db_service,
+                                   foundry_service=foundry_service)
+    github_crawler.run()
+    logging.info('GitHub crawler function finished.')
+
+
+@app.timer_trigger(schedule="0 0 0 * * *",  # Run every day at midnight
+                   arg_name="timer_request",
+                   run_on_startup=False,
                    use_monitor=False)
 def blogs_crawler_func(timer_request: func.TimerRequest) -> None:
     logging.info('Blogs crawler function started.')
@@ -58,12 +58,12 @@ def blogs_crawler_func(timer_request: func.TimerRequest) -> None:
 #     logging.info('Seismic crawler function finished.')
 
 
-@app.timer_trigger(schedule="0 */5 * * * *",
-                   arg_name="timer_request",
-                   run_on_startup=True,
-                   use_monitor=False)
-def ping_psql_func(timer_request: func.TimerRequest) -> None:
-    logging.info('Ping PostgreSQL function started.')
-    postgres_ping_service = PostgresPingService()
-    postgres_ping_service.run()
-    logging.info('Ping PostgreSQL function finished.')
+# @app.timer_trigger(schedule="0 */5 * * * *",
+#                    arg_name="timer_request",
+#                    run_on_startup=False,
+#                    use_monitor=False)
+# def ping_psql_func(timer_request: func.TimerRequest) -> None:
+#     logging.info('Ping PostgreSQL function started.')
+#     postgres_ping_service = PostgresPingService()
+#     postgres_ping_service.run()
+#     logging.info('Ping PostgreSQL function finished.')
