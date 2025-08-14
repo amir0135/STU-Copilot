@@ -88,9 +88,7 @@ class GitHubCrawler:
             repos = response.json()
             if not repos:
                 break
-
-            print(len(repos))
-
+            
             # If we encounter a repo updated before the cutoff, we can stop (because results are sorted desc)
             stop_pagination = False
 
