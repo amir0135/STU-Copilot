@@ -4,7 +4,6 @@ Hello and welcome! 👋 I'm STU Copilot, your intelligent assistant from Microso
 
 🔧 **Technical Guidance** - Architecture designs, solution engineering, and Azure best practices  
 💼 **Sales Support** - Product information, competitive insights, and customer engagement strategies  
-🏢 **Industry Insights** - Sector-specific solutions and market intelligence  
 📚 **Microsoft Solutions** - Comprehensive guidance on Azure, Microsoft 365, Power Platform, and more
 
 Whether you're a Technical Specialist, Solution Architect, Sales Professional, or need support with Microsoft technologies, I'm equipped with specialized agents to provide you with accurate, up-to-date information and actionable insights.
@@ -42,9 +41,6 @@ Dedicated to searching AWS documentation when you need information about Amazon 
 - Provides properly formatted results with links
 - Useful for hybrid cloud scenarios or migration discussions
 
-### 💰 **Azure Pricing Agent**
-Helps with Azure cost estimation and pricing information (currently in development).
-
 ### 🔍 **Bing Search Agent**
 Performs web searches to find information not covered by specialized documentation agents:
 - General web search capabilities
@@ -56,12 +52,6 @@ Searches for relevant blog posts and articles with:
 - Numbered markdown list format
 - Publication dates and summaries
 - Links to original sources
-
-### 💬 **Communicator Agent**
-Acts as the initial chat router and welcomer:
-- Routes requests to appropriate agents
-- Handles user onboarding
-- Works with questioner agent for clarifications
 
 ### 🤔 **Explainer Agent**
 Your comprehensive explanation specialist that provides:
@@ -78,21 +68,6 @@ Searches GitHub repositories and presents results in markdown tables:
 - Star counts, update dates, and archive status
 - Direct links to repositories
 
-### 📖 **GitHub Docs Search Agent**
-Specialized for searching GitHub's official documentation.
-
-### 🏭 **Industry Agent**
-Provides industry-specific insights (currently in development).
-
-### 🎯 **MCAPS Agent**
-Specialized agent for Microsoft MCAPS (Microsoft Customer and Partner Solutions) related queries.
-
-### 🎯 **Planner Agent**
-Orchestrates query flow and agent selection based on:
-- User role (Technical Specialist, Sales Specialist, etc.)
-- Query type and requirements
-- Returns JSON format with selected agents
-
 ### ❓ **Questioner Agent**
 Clarifies user requests by asking targeted questions, focusing on:
 - Microsoft technologies and services
@@ -105,12 +80,6 @@ Searches for sales and marketing materials:
 - Presentation materials
 - Sales resources
 - Marketing content with solution areas and confidentiality levels
-
-### 📄 **Summarizer Agent**
-Creates concise summaries of chat conversations:
-- Under 50 words
-- Focuses on main topics and key decisions
-- Identifies required actions and follow-ups
 
 ## How to Use the Agents
 

@@ -32,11 +32,11 @@ class AgentFactory:
         self.agents = {
             "questioner_agent": self.get_questioner_agent(),
             "planner_agent": self.get_planner_agent(),
-            #"github_agent": self.get_github_agent(),
+            "github_agent": self.get_github_agent(),
             "github_docs_search_agent": self.get_github_docs_search_agent(),
             "microsoft_docs_agent": self.get_microsoft_docs_agent(),
             "blog_posts_agent": self.get_blog_posts_agent(),
-            #"seismic_agent": self.get_seismic_agent(),
+            "seismic_agent": self.get_seismic_agent(),
             "bing_search_agent": self.get_bing_search_agent(),
             "architect_agent": self.get_architect_agent(),
             "summarizer_agent": self.get_summarizer_agent(),
