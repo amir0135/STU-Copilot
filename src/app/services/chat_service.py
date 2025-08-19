@@ -140,8 +140,13 @@ class ChatService:
     def get_actions(self, agent_name: str) -> List[cl.Action]:
         """Get the actions available for the specified agent."""
 
+        # For specific agents, return no actions
+        if agent_name in ["questioner_agent"]:
+            return []
+
         # Return all the actions except the one for the specified agent
-        actions: List[cl.Action] = []
+        actions: List[cl.Action] = []        
+        
         for agent_key, agent in self.agents_dict.items():
             if agent["is_action"] and agent_key != agent_name:
                 actions.append(cl.Action(
@@ -156,12 +161,10 @@ class ChatService:
     def select_responder_agent(self,
                                agents: dict[str, ChatCompletionAgent],
                                current_message: cl.Message,
-                               chat_history: ChatHistory,
                                latest_agent_name: str) -> ChatCompletionAgent:
         """Select the appropriate agent based on the current message and chat history."""
 
         print(f"Current message command: {current_message.command}")
-        print(f"Chat history length: {len(chat_history)}")
         print(f"Latest agent in use: {latest_agent_name}")
 
         # If the current message is a command, use the corresponding agent
