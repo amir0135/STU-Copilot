@@ -138,7 +138,6 @@ async def on_message(user_message: cl.Message):
             responder_agent: ChatCompletionAgent = chat_service.select_responder_agent(
                 agents=agents,
                 current_message=user_message,
-                chat_history=chat_history,
                 latest_agent_name=cl.user_session.get("latest_agent_name")
             )
 
@@ -216,6 +215,20 @@ async def on_chat_resume(thread: ThreadDict):
     await cl.context.emitter.set_commands(
         chat_service.get_commands()
     )
+    chat_history: ChatHistory = ChatHistory()
+
+    for step in thread["steps"]:
+        if step["type"] == "assistant_message":
+            chat_history.add_assistant_message(step["output"])
+        elif step["type"] == "user_message":
+            chat_history.add_user_message(step["output"])
+    cl.user_session.set("chat_history", chat_history)
+
+    chat_thread = ChatHistoryAgentThread(
+        chat_history=chat_history,
+        thread_id=thread["id"])
+
+    cl.user_session.set("chat_thread", chat_thread)
 
 
 @cl.set_starters  # type: ignore
