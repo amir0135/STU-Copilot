@@ -1,13 +1,15 @@
 import os
 from contextlib import asynccontextmanager
 from semantic_kernel.functions import kernel_function
-from semantic_kernel.connectors.mcp import MCPStreamableHttpPlugin, TextContent, MCPStdioPlugin
+from semantic_kernel.connectors.mcp import MCPStreamableHttpPlugin, TextContent
 from semantic_kernel.contents import ChatMessageContent
 from azure.identity.aio import DefaultAzureCredential
 from semantic_kernel.agents import AzureAIAgent
 import chainlit as cl
 from .cosmos_db_service import cosmos_db_service
 import json
+from mcp import ClientSession, types
+from mcp.client.streamable_http import streamablehttp_client
 
 # Environment variables for AI Foundry project endpoint and agent IDs
 ai_foundry_project_endpoint = os.getenv("AI_FOUNDRY_PROJECT_ENDPOINT")
@@ -54,7 +56,7 @@ class GitHubPlugin:
                 role="user",
                 content=input
             )
-            response = await agent.get_response(messages=[structured_message])            
+            response = await agent.get_response(messages=[structured_message])
             if not response:
                 return "Could not retrieve results from GitHub Docs Portal."
             return response
@@ -69,41 +71,48 @@ class MicrosoftDocsPlugin:
     async def microsoft_docs_search(input: str) -> str:
         """Search for relevant Microsoft documentation."""
 
-        async with MCPStreamableHttpPlugin(
-            name="Microsoft Documentation Search",
-            url="https://learn.microsoft.com/api/mcp",
-            request_timeout=15
-        ) as plugin:
-            response: list[TextContent] = await plugin.call_tool(
-                "microsoft_docs_search",
-                query=input)
-            results = response[0].inner_content.text if response else ""
-            if not isinstance(results, str) or not results:
-                return "Could not retrieve results from Microsoft Docs Portal."
+        async with streamablehttp_client("https://learn.microsoft.com/api/mcp") as (
+            read_stream,
+            write_stream,
+            _,
+        ):
+            # Create a session using the client streams
+            async with ClientSession(read_stream, write_stream) as session:
+                # Initialize the connection
+                await session.initialize()
 
-            # Parse the JSON response
-            data = json.loads(results)
+                # Call the Microsoft Docs MCP tool
+                response = await session.call_tool(
+                    "microsoft_docs_search",
+                    arguments={
+                        "query": input
+                    }
+                )
+                if response.isError or not response.content or not response.content[0] or not response.content[0].text:
+                    return "Could not retrieve results from Microsoft Docs Portal."
 
-            aggregated = {}
+                data = json.loads(response.content[0].text)
 
-            for item in data:
-                title = item["title"]
-                content = item["content"]
-                heading = f"# {title}\n"
-                # Remove the heading from the content if it exists
-                if content.startswith(heading):
-                    content = content[len(heading):]
-                if title in aggregated:
-                    aggregated[title].append(content)
-                else:
-                    aggregated[title] = [content]
+                aggregated = {}
 
-            aggregated_results = [
-                {"title": title, "content": "\n\n".join(contents)}
-                for title, contents in aggregated.items()
-            ]
+                for item in data:
+                    title = item["title"]
+                    content = item["content"]
+                    heading = f"# {title}\n"
+                    # Remove the heading from the content if it exists
+                    if content.startswith(heading):
+                        content = content[len(heading):]
+                    if title in aggregated:
+                        aggregated[title].append(content)
+                    else:
+                        aggregated[title] = [content]
 
-        return json.dumps(aggregated_results, indent=2, ensure_ascii=False)
+                aggregated_results = [
+                    {"title": title, "content": "\n\n".join(contents)}
+                    for title, contents in aggregated.items()
+                ]
+
+                return json.dumps(aggregated_results, indent=2, ensure_ascii=False)
 
 
 class BlogPostsPlugin:
@@ -165,47 +174,40 @@ class AWSDocsPlugin:
     @kernel_function(name="aws_docs_search",
                      description="Search for relevant AWS documentation for a given topic.")
     @cl.step(type="tool", name="AWS Documentation Search")
-    async def aws_docs_search(input: str) -> str:
+    async def aws_docs_search(input: str) -> list:
         """Search for relevant AWS documentation."""
-        async with MCPStdioPlugin(
-            name="AWS Docs",
-            description="AWS Docs Search",
-            command="docker",
-            args=[
-                "run",
-                "--rm",
-                "--interactive",
-                "--env",
-                "FASTMCP_LOG_LEVEL=ERROR",
-                "--env",
-                "AWS_DOCUMENTATION_PARTITION=aws",
-                "mcp/aws-documentation:latest"
-            ],
-            env={},
-            request_timeout=30
 
-        ) as aws_docs_plugin:
-            contents = []
-            response: list[TextContent] = await aws_docs_plugin.call_tool(
-                tool_name="search_documentation",
-                search_phrase=input,
-                limit=5)
-            for item in response:
-                if isinstance(item, TextContent):
-                    data = json.loads(item.text)
-                    contents.append({
-                        "url": data["url"],
-                        "title": data["title"],
-                        "context": data["context"]
-                    })
-                else:
-                    contents.append({
-                        "url": "",
-                        "title": "Could not retrieve results from AWS Docs Portal.",
-                        "context": ""
-                    })
-        # <-- context manager closes here, after all items are buffered
-        return json.dumps(contents, indent=2)
+        async with streamablehttp_client("https://knowledge-mcp.global.api.aws") as (
+            read_stream,
+            write_stream,
+            _,
+        ):
+            # Create a session using the client streams
+            async with ClientSession(read_stream, write_stream) as session:
+
+                # Initialize the connection
+                await session.initialize()
+
+                # Call the tool
+                response = await session.call_tool(
+                    "aws___search_documentation",
+                    arguments={
+                        "search_phrase": input,
+                        "limit": 10
+                    }
+                )
+
+                # Check for errors
+                if response.isError or not response.content or len(response.content) == 0:
+                    return "Could not retrieve results from AWS Docs Portal."
+
+                results = []
+                for content in response.content:
+                    if isinstance(content, types.TextContent):
+                        data = json.loads(content.text)
+                        results = data["response"]["payload"]["content"]["result"]
+
+                return json.dumps(results, indent=2, ensure_ascii=False)
 
 
 @asynccontextmanager

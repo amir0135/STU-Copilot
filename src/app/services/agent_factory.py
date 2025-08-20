@@ -87,10 +87,10 @@ class AgentFactory:
             plugins=[
                 self.agents.get("questioner_agent"),
                 self.agents.get("microsoft_docs_agent"),
-                #self.agents.get("github_agent"),
+                self.agents.get("github_agent"),
                 self.agents.get("github_docs_search_agent"),
                 self.agents.get("blog_posts_agent"),
-                #self.agents.get("seismic_agent"),
+                self.agents.get("seismic_agent"),
                 self.agents.get("bing_search_agent"),
                 self.agents.get("aws_docs_agent"),
                 self.agents.get("explainer_agent"),
@@ -165,7 +165,7 @@ class AgentFactory:
     def get_microsoft_docs_agent(self) -> ChatCompletionAgent:
         """Create a Microsoft Docs agent with the necessary plugins."""
         agent_name = "microsoft_docs_agent"
-        model_name = "gpt-4.1-mini"
+        model_name = "gpt-4.1"
 
         # Clone the base kernel and add the OpenAI service
         kernel = self.create_kernel(
@@ -338,7 +338,7 @@ class AgentFactory:
         )
 
         return summarizer_agent
-    
+
     def get_explainer_agent(self) -> ChatCompletionAgent:
         """Create an explainer agent with the necessary plugins."""
         agent_name = "explainer_agent"
