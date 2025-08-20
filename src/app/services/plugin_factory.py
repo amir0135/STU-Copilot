@@ -177,7 +177,7 @@ class AWSDocsPlugin:
     @kernel_function(name="aws_docs_search",
                      description="Search for relevant AWS documentation for a given topic.")
     @cl.step(type="tool", name="AWS Documentation Search")
-    async def aws_docs_search(self, input: str) -> list:
+    async def aws_docs_search(self, input: str) -> str:
         """Search for relevant AWS documentation."""
 
         async with streamablehttp_client("https://knowledge-mcp.global.api.aws") as (
