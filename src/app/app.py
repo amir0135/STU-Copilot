@@ -12,6 +12,7 @@ from engineio.payload import Payload
 import time
 from chainlit.types import ThreadDict
 
+
 # Set the buffer size to 10MB or use a configurable value from the environment
 MAX_HTTP_BUFFER_SIZE = int(os.getenv("MAX_HTTP_BUFFER_SIZE", 100_000_000))
 # Configurable buffer size

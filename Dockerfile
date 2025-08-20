@@ -13,6 +13,10 @@ RUN pip install --root-user-action=ignore --no-cache-dir -r requirements.txt
 # Copy the application source code (excluding .env via .dockerignore)
 COPY src/app/ .
 
+# HEALTHCHECK: give the app 120s to start, then check every 30s with 3s timeout
+HEALTHCHECK --interval=30s --timeout=3s --start-period=120s --retries=3 \
+    CMD ["python","-c","import socket,sys; s=socket.socket(); s.settimeout(3); s.connect(('127.0.0.1',8000)); s.close()"]
+
 # Expose the default Chainlit port
 EXPOSE 8000
 
