@@ -2,7 +2,6 @@ import chainlit as cl
 from typing import Optional, List
 from chainlit.types import CommandDict
 from semantic_kernel.agents import ChatCompletionAgent
-from semantic_kernel.contents import ChatHistory
 from .agent_factory import agent_factory
 
 

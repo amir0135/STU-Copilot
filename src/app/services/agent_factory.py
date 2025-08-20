@@ -8,8 +8,8 @@ from semantic_kernel.connectors.ai.open_ai import (
 )
 from .cache_service import cache_service
 from .plugin_factory import (
-    github_plugin, microsoft_docs_plugin, blog_posts_plugin,
-    seismic_plugin, bing_plugin, aws_docs_plugin
+    github_plugin, github_docs_plugin, microsoft_docs_plugin,
+    blog_posts_plugin, seismic_plugin, bing_plugin, aws_docs_plugin
 )
 import logging
 
@@ -157,7 +157,7 @@ class AgentFactory:
             name=agent_name,
             description="GitHub agent that fetches relevant information from GitHub repositories.",
             instructions=cache_service.load_prompt(agent_name),
-            plugins=[github_plugin.github_repository_search]
+            plugins=[github_plugin]
         )
 
         return github_agent
@@ -179,7 +179,7 @@ class AgentFactory:
             name=agent_name,
             description="Microsoft Docs agent that fetches relevant documentation from Microsoft Docs.",
             instructions=cache_service.load_prompt(agent_name),
-            plugins=[microsoft_docs_plugin.microsoft_docs_search]
+            plugins=[microsoft_docs_plugin]
         )
 
         return microsoft_docs_agent
@@ -201,7 +201,7 @@ class AgentFactory:
             name=agent_name,
             description="Blog Posts agent that searches for relevant blog posts.",
             instructions=cache_service.load_prompt(agent_name),
-            plugins=[blog_posts_plugin.blog_posts_search]
+            plugins=[blog_posts_plugin]
         )
 
         return blog_posts_agent
@@ -223,7 +223,7 @@ class AgentFactory:
             name=agent_name,
             description="Seismic agent that searches for relevant presentations and PowerPoints.",
             instructions=cache_service.load_prompt(agent_name),
-            plugins=[seismic_plugin.seismic_search]
+            plugins=[seismic_plugin]
         )
 
         return seismic_agent
@@ -245,7 +245,7 @@ class AgentFactory:
             name=agent_name,
             description="Bing Search agent that performs web searches to find relevant information.",
             instructions=cache_service.load_prompt(agent_name),
-            plugins=[bing_plugin.bing_search]
+            plugins=[bing_plugin]
         )
 
         return bing_search_agent
@@ -267,7 +267,7 @@ class AgentFactory:
             name=agent_name,
             description="GitHub Docs Search agent that performs searches to find relevant documentation.",
             instructions=cache_service.load_prompt(agent_name),
-            plugins=[github_plugin.github_docs_search]
+            plugins=[github_docs_plugin]
         )
 
         return github_docs_search_agent
@@ -289,7 +289,7 @@ class AgentFactory:
             name=agent_name,
             description="AWS Docs agent that fetches relevant documentation from AWS Docs.",
             instructions=cache_service.load_prompt(agent_name),
-            plugins=[aws_docs_plugin.aws_docs_search]
+            plugins=[aws_docs_plugin]
         )
 
         return aws_docs_agent
@@ -311,8 +311,8 @@ class AgentFactory:
             name=agent_name,
             instructions=cache_service.load_prompt(agent_name),
             plugins=[
-                microsoft_docs_plugin.microsoft_docs_search,
-                bing_plugin.bing_search
+                microsoft_docs_plugin,
+                bing_plugin
             ]
         )
 

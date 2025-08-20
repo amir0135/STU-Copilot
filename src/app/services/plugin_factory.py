@@ -34,7 +34,7 @@ class GitHubPlugin:
     @kernel_function(name="github_repository_search",
                      description="Search for relevant GitHub repositories for a given topic.")
     @cl.step(type="tool", name="GitHub Repository Search")
-    async def github_repository_search(input: str) -> list:
+    async def github_repository_search(self, input: str) -> list:
         """Search for relevant GitHub repositories."""
         results = cosmos_db_service.hybrid_search(
             search_terms=input,
@@ -44,10 +44,13 @@ class GitHubPlugin:
             top_count=10)
         return results
 
+class GitHubDocsPlugin:
+    """A plugin to search GitHub documentation."""
+    
     @kernel_function(name="github_docs_search",
                      description="Search for relevant GitHub documentation for a given topic.")
     @cl.step(type="tool", name="GitHub Documentation Search")
-    async def github_docs_search(input: str) -> str:
+    async def github_docs_search(self, input: str) -> str:
         """Search for relevant GitHub documentation."""
         async with get_ai_foundry_client() as client:
             agent_definition = await client.agents.get_agent(agent_id=github_docs_search_agent_id)
@@ -68,7 +71,7 @@ class MicrosoftDocsPlugin:
     @kernel_function(name="microsoft_docs_search",
                      description="Search for relevant Microsoft documentation for a given topic.")
     @cl.step(type="tool", name="Microsoft Documentation Search")
-    async def microsoft_docs_search(input: str) -> str:
+    async def microsoft_docs_search(self, input: str) -> str:
         """Search for relevant Microsoft documentation."""
 
         async with streamablehttp_client("https://learn.microsoft.com/api/mcp") as (
@@ -121,7 +124,7 @@ class BlogPostsPlugin:
     @kernel_function(name="blog_posts_search",
                      description="Search for relevant blog posts for a given topic.")
     @cl.step(type="tool", name="Blog Posts Search")
-    async def blog_posts_search(input: str) -> list:
+    async def blog_posts_search(self, input: str) -> list:
         """Search for relevant blog posts."""
         results = cosmos_db_service.hybrid_search(
             search_terms=input,
@@ -137,7 +140,7 @@ class SeismicPlugin:
     @kernel_function(name="seismic_search",
                      description="Search for relevant Seismic data for a given topic.")
     @cl.step(type="tool", name="Seismic Data Search")
-    async def seismic_search(input: str) -> list:
+    async def seismic_search(self, input: str) -> list:
         """Search for relevant Seismic data."""
         results = cosmos_db_service.hybrid_search(
             search_terms=input,
@@ -153,7 +156,7 @@ class BingPlugin:
 
     @kernel_function(name="bing_search", description="Search Bing for a given query.")
     @cl.step(type="tool", name="Bing Search")
-    async def bing_search(input: str) -> str:
+    async def bing_search(self, input: str) -> str:
         """Perform a Bing search."""
         async with get_ai_foundry_client() as client:
             agent_definition = await client.agents.get_agent(agent_id=bing_search_agent_id)
@@ -174,7 +177,7 @@ class AWSDocsPlugin:
     @kernel_function(name="aws_docs_search",
                      description="Search for relevant AWS documentation for a given topic.")
     @cl.step(type="tool", name="AWS Documentation Search")
-    async def aws_docs_search(input: str) -> list:
+    async def aws_docs_search(self, input: str) -> list:
         """Search for relevant AWS documentation."""
 
         async with streamablehttp_client("https://knowledge-mcp.global.api.aws") as (
@@ -223,6 +226,7 @@ async def get_ai_foundry_client():
 
 # Global instances
 github_plugin = GitHubPlugin()
+github_docs_plugin = GitHubDocsPlugin()
 microsoft_docs_plugin = MicrosoftDocsPlugin()
 blog_posts_plugin = BlogPostsPlugin()
 seismic_plugin = SeismicPlugin()
