@@ -35,7 +35,7 @@ import chainlit as cl
 from semantic_kernel.agents import ChatCompletionAgent, ChatHistoryAgentThread
 from semantic_kernel.contents import ChatHistory
 from services.agent_factory import AgentFactory
-from semantic_kernel.connectors.mcp import MCPStdioPlugin, MCPSsePlugin, MCPWebsocketPlugin, TextContent
+from semantic_kernel.connectors.mcp import MCPStdioPlugin, MCPSsePlugin, MCPWebsocketPlugin, TextContent, MCPStreamableHttpPlugin
 import logging
 import socketio
 from engineio.payload import Payload
@@ -82,54 +82,51 @@ async def on_message(user_message: cl.Message):
     chat_history.add_user_message(user_message.content)
     answer = cl.Message(content="")
 
-    async with MCPStdioPlugin(
-        name="AWS Docs",
-        description="AWS Docs Search",
-        command="docker",
-        args=[
-            "run",
-            "--rm",
-            "--interactive",
-            "--env",
-            "FASTMCP_LOG_LEVEL=ERROR",
-            "--env",
-            "AWS_DOCUMENTATION_PARTITION=aws",
-            "mcp/aws-documentation:latest"
-        ],
-        env={},
-        request_timeout=30
-
+    async with MCPStreamableHttpPlugin(
+        name="AWS Documentation Search",
+        url="https://learn.microsoft.com/api/mcp",
+        request_timeout=15
     ) as aws_docs_plugin:
+
+        tools = await aws_docs_plugin.load_tools()
+        print(tools)
+
+        # responses: list[TextContent] = await aws_docs_plugin.call_tool(
+        #     "aws___search_documentation",
+        #     search_phrase=user_message.content,
+        #     limit=5)
+
+        # print(responses)
 
         # Call the tool with the input message
         # responses: list[TextContent] = await aws_docs_plugin.call_tool("search_documentation", search_phrase=user_message.content, limit=5)
         # result: str = ""
-        
+
         # for response in responses:
         #     result += f"\n\n {response.inner_content.text}"
 
         # answer.content = str(result)
 
         # Create the agent
-        agent = ChatCompletionAgent(
-            kernel=kernel,
-            name=agent_name,
-            instructions=("Answer the user's question using the available plugins."
-                          "Use the 'search_documentation' tool to search for AWS documentation."
-                          "Pass 'search_phrase' as the input to the tool."
-                          "Pass 'limit' as 5 to the tool."),
-            plugins=[
-                aws_docs_plugin
-            ]
-        )
+        # agent = ChatCompletionAgent(
+        #     kernel=kernel,
+        #     name=agent_name,
+        #     instructions=("Answer the user's question using the available plugins."
+        #                   "Use the 'search_documentation' tool to search for AWS documentation."
+        #                   "Pass 'search_phrase' as the input to the tool."
+        #                   "Pass 'limit' as 5 to the tool."),
+        #     plugins=[
+        #         aws_docs_plugin
+        #     ]
+        # )
 
-        # Stream the agent's response token by token
-        async for token in agent.invoke_stream(
-                messages=chat_history,
-                thread=thread
-        ):
-            if token.content:
-                await answer.stream_token(token.content.content)
+        # # Stream the agent's response token by token
+        # async for token in agent.invoke_stream(
+        #         messages=chat_history,
+        #         thread=thread
+        # ):
+        #     if token.content:
+        #         await answer.stream_token(token.content.content)
 
         chat_history.add_assistant_message(answer.content)
         cl.user_session.set("thread", thread)
@@ -140,8 +137,8 @@ async def on_message(user_message: cl.Message):
 async def set_starts() -> List[cl.Starter]:
     return [
         cl.Starter(
-            label="Latest 10 commits",
-            message="What are the last 10 commits in the Microsoft/semantic-kernel repository?",
+            label="S3 auth options",
+            message="What are the S3 authentication options available?",
         ),
         cl.Starter(
             label="Issue #10785?",
