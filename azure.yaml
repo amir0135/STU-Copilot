@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/refs/heads/main/schemas/v1.0/azure.yaml.json
+
+name: stu-copilot
+
+infra:
+  provider: bicep
+
+services:
+  stu-copilot-web:
+    project: src/app
+    host: containerapp
+    language: python
+    docker:
+      path: ../../Dockerfile
+      context: ../..
+  
+  stu-copilot-crawlers:
+    project: src/crawlers
+    host: function
+    language: python

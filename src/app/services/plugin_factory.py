@@ -18,14 +18,18 @@ if not ai_foundry_project_endpoint:
         "AI_FOUNDRY_PROJECT_ENDPOINT environment variable is not set.")
 
 bing_search_agent_id = os.getenv("BING_SEARCH_AGENT_ID")
-if not bing_search_agent_id:
-    raise EnvironmentError(
-        "BING_SEARCH_AGENT_ID environment variable is not set.")
+# Make Bing Search optional since it's being migrated to Bing Search Grounding
+if bing_search_agent_id:
+    print(f"Using Bing Search Agent ID: {bing_search_agent_id}")
+else:
+    print("Bing Search Agent ID not set - Bing search will be disabled")
 
 github_docs_search_agent_id = os.getenv("GITHUB_DOCS_SEARCH_AGENT_ID")
-if not github_docs_search_agent_id:
-    raise EnvironmentError(
-        "GITHUB_DOCS_SEARCH_AGENT_ID environment variable is not set.")
+# Make GitHub Docs Search optional until agents are properly set up
+if github_docs_search_agent_id:
+    print(f"Using GitHub Docs Search Agent ID: {github_docs_search_agent_id}")
+else:
+    print("GitHub Docs Search Agent ID not set - GitHub docs search will be disabled")
 
 
 class GitHubPlugin:
@@ -52,6 +56,9 @@ class GitHubDocsPlugin:
     @cl.step(type="tool", name="GitHub Documentation Search")
     async def github_docs_search(self, input: str) -> str:
         """Search for relevant GitHub documentation."""
+        if not github_docs_search_agent_id:
+            return "GitHub documentation search is currently unavailable. The agent needs to be configured."
+        
         async with get_ai_foundry_client() as client:
             agent_definition = await client.agents.get_agent(agent_id=github_docs_search_agent_id)
             agent = AzureAIAgent(client=client, definition=agent_definition)
@@ -62,7 +69,7 @@ class GitHubDocsPlugin:
             response = await agent.get_response(messages=[structured_message])
             if not response:
                 return "Could not retrieve results from GitHub Docs Portal."
-            return response
+            return str(response)
 
 
 class MicrosoftDocsPlugin:
@@ -158,6 +165,9 @@ class BingPlugin:
     @cl.step(type="tool", name="Bing Search")
     async def bing_search(self, input: str) -> str:
         """Perform a Bing search."""
+        if not bing_search_agent_id:
+            return "Bing search is currently unavailable. The service is being migrated to use Bing Search Grounding."
+        
         async with get_ai_foundry_client() as client:
             agent_definition = await client.agents.get_agent(agent_id=bing_search_agent_id)
             agent = AzureAIAgent(client=client, definition=agent_definition)
@@ -168,7 +178,7 @@ class BingPlugin:
             response = await agent.get_response(messages=[structured_message])
             if not response:
                 return "Could not retrieve results from Bing Search."
-            return response
+            return str(response)
 
 
 class AWSDocsPlugin:

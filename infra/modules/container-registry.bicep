@@ -21,11 +21,11 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2025-04-01' =
     dataEndpointEnabled: false
     networkRuleBypassOptions: 'AzureServices'
     networkRuleSet: {
-      defaultAction: 'Deny'
+      defaultAction: 'Allow'
     }
     policies: {
       quarantinePolicy: {
-        status: 'enabled'
+        status: 'disabled'
       }
       retentionPolicy: {
         status: 'enabled'
@@ -36,7 +36,7 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2025-04-01' =
         type: 'Notary'
       }
     }
-    publicNetworkAccess: 'Disabled'
+    publicNetworkAccess: 'Enabled'
     zoneRedundancy: 'Disabled'
     encryption: {
       status: 'disabled'
@@ -46,3 +46,4 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2025-04-01' =
 
 output containerRegistryId string = containerRegistry.id
 output containerRegistryName string = containerRegistry.name
+output containerRegistryLoginServer string = containerRegistry.properties.loginServer

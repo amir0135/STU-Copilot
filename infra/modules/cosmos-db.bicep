@@ -8,10 +8,9 @@ param totalThroughputLimit int = 400
 resource cosmosDB 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' = {
   name: name
   location: location
-  tags: {
-    Environment: tags.environment
+  tags: union(tags, {
     SecurityControl: 'Ignore'
-  }
+  })
   kind: 'GlobalDocumentDB'
   identity: {
     type: 'None'
@@ -29,15 +28,12 @@ resource cosmosDB 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' = {
       schemaType: 'WellDefined'
     }
     databaseAccountOfferType: 'Standard'
-    enableMaterializedViews: false
     capacityMode: 'Serverless'
     networkAclBypass: 'None'
     disableLocalAuth: false
     enablePartitionMerge: false
     enablePerRegionPerPartitionAutoscale: false
     enableBurstCapacity: false
-    enablePriorityBasedExecution: false
-    defaultPriorityLevel: 'High'
     minimalTlsVersion: 'Tls12'
     consistencyPolicy: {
       defaultConsistencyLevel: 'Session'
@@ -122,3 +118,5 @@ resource cosmosDB 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' = {
 output cosmosDBId string = cosmosDB.id
 output cosmosDBName string = cosmosDB.name
 output cosmosDBDocumentEndpoint string = cosmosDB.properties.documentEndpoint
+@secure()
+output cosmosDBPrimaryKey string = cosmosDB.listKeys().primaryMasterKey

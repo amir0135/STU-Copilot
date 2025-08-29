@@ -49,6 +49,8 @@ resource aiFoundryProject 'Microsoft.CognitiveServices/accounts/projects@2025-04
 output aiFoundryId string = aiFoundry.id
 output aiFoundryName string = aiFoundry.name
 output aiFoundryEndpoint string = aiFoundry.properties.endpoint
+@secure()
+output aiFoundryApiKey string = aiFoundry.listKeys().key1
 output aiFoundryProjectId string = aiFoundryProject.id
 output aiFoundryProjectName string = aiFoundryProject.name
 

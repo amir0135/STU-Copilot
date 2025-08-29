@@ -46,7 +46,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' = {
     minimumTlsVersion: 'TLS1_2'
     networkAcls: {
       bypass: 'AzureServices'
-      defaultAction: 'Deny'
+      defaultAction: 'Allow'
     }
     supportsHttpsTrafficOnly: true
   }
@@ -54,3 +54,5 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' = {
 
 output storageAccountId string = storageAccount.id
 output storageAccountName string = storageAccount.name
+@secure()
+output storageAccountKey string = storageAccount.listKeys().keys[0].value

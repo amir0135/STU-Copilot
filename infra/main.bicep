@@ -1,42 +1,54 @@
 targetScope = 'subscription'
 
-@description('The location to deploy the resources.')
-param location string = 'swedencentral'
+@minLength(1)
+@maxLength(64)
+@description('Name of the environment that can be used as part of naming resource convention')
+param environmentName string
 
-@description('The name of the environment.')
-param environmentName string = 'dev'
+@minLength(1)
+@description('Primary location for all resources')
+param location string
 
-@description('The name of the postfix to use for the resources.')
-param postfix string = 'stu-copilot'
+@description('Resource group name')
+param resourceGroupName string
 
-@description('Tags to apply to the resources.')
-param tags object = {
-  Environment: environmentName
-}
+@description('Tags to apply to all resources')
+param tags object = {}
 
-@description('The name of the resource group.')
-var resourceGroupName = 'rg-${environmentName}-${postfix}'
+@description('Additional environment variables for stu-copilot-web')
+param environment string = 'production'
 
-resource resourceGroup 'Microsoft.Resources/resourceGroups@2025-03-01' = {
+@description('Additional environment variables for stu-copilot-crawlers')
+param functionsExtensionVersion string = '~4'
+param functionsWorkerRuntime string = 'python'
+
+// Resource token for unique naming
+var resourceToken = toLower(uniqueString(subscription().id, location, environmentName))
+
+// Resource group
+resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: resourceGroupName
   location: location
-  tags: tags
+  tags: union(tags, { 'azd-env-name': environmentName })
 }
 
+// Core infrastructure modules
 module logAnalytics 'modules/log-analytics.bicep' = {
   name: 'logAnalytics'
-  scope: resourceGroup
+  scope: rg
   params: {
-    name: 'log-${environmentName}-${postfix}'
+    name: 'az-log-${resourceToken}'
+    location: location
     tags: tags
   }
 }
 
 module applicationInsights 'modules/application-insights.bicep' = {
   name: 'applicationInsights'
-  scope: resourceGroup
+  scope: rg
   params: {
-    name: 'appi-${environmentName}-${postfix}'
+    name: 'az-ai-${resourceToken}'
+    location: location
     logAnalyticsId: logAnalytics.outputs.logAnalyticsId
     tags: tags
   }
@@ -44,77 +56,166 @@ module applicationInsights 'modules/application-insights.bicep' = {
 
 module storageAccount 'modules/storage-account.bicep' = {
   name: 'storageAccount'
-  scope: resourceGroup
+  scope: rg
   params: {
-    name: 'st${environmentName}${postfix}'
+    name: 'azst${resourceToken}'
+    location: location
     tags: tags
   }
 }
 
 module keyVault 'modules/key-vault.bicep' = {
   name: 'keyVault'
-  scope: resourceGroup
+  scope: rg
   params: {
-    name: 'kv-${environmentName}-${postfix}'
+    name: 'az-kv-${resourceToken}'
+    location: location
     tags: tags
   }
 }
 
-// module containerRegistry 'modules/container-registry.bicep' = {
-//   name: 'containerRegistry'
-//   scope: resourceGroup
-//   params: {
-//     name: 'acr${environmentName}${postfix}'
-//     tags: tags
-//   }
-// }
+module containerRegistry 'modules/container-registry.bicep' = {
+  name: 'containerRegistry'
+  scope: rg
+  params: {
+    name: 'azcr${resourceToken}'
+    location: location
+    tags: tags
+  }
+}
 
 module aiSearch 'modules/ai-search.bicep' = {
   name: 'aiSearch'
-  scope: resourceGroup
+  scope: rg
   params: {
-    name: 'srch-${environmentName}-${postfix}'
+    name: 'az-srch-${resourceToken}'
+    location: location
     tags: tags
   }
 }
+
 module cosmosDB 'modules/cosmos-db.bicep' = {
   name: 'cosmosDB'
-  scope: resourceGroup
+  scope: rg
   params: {
-    name: 'cosmos-${environmentName}-${postfix}'
+    name: 'az-cosmos-${resourceToken}'
+    location: location
     tags: tags
   }
 }
 
 module aiFoundry 'modules/ai-foundry.bicep' = {
   name: 'aiFoundry'
-  scope: resourceGroup
+  scope: rg
   params: {
-    name: 'aif-${environmentName}-${postfix}'
-    projectName: 'proj-${environmentName}-${postfix}'
+    name: 'az-aif-${resourceToken}'
+    projectName: 'az-proj-${resourceToken}'
+    location: location
     tags: tags
   }
 }
 
-output resourceGroupId string = resourceGroup.id
-output resourceGroupName string = resourceGroup.name
-output logAnalyticsId string = logAnalytics.outputs.logAnalyticsId
-output logAnalyticsName string = logAnalytics.outputs.logAnalyticsName
-output applicationInsightsId string = applicationInsights.outputs.applicationInsightsId
-output applicationInsightsName string = applicationInsights.outputs.applicationInsightsName
-output storageAccountId string = storageAccount.outputs.storageAccountId
-output storageAccountName string = storageAccount.outputs.storageAccountName
-output keyVaultId string = keyVault.outputs.keyVaultId
-output keyVaultName string = keyVault.outputs.keyVaultName
-//output containerRegistryId string = containerRegistry.outputs.containerRegistryId
-//output containerRegistryName string = containerRegistry.outputs.containerRegistryName
-output aiSearchId string = aiSearch.outputs.aiSearchId
-output aiSearchName string = aiSearch.outputs.aiSearchName
-output cosmosDBId string = cosmosDB.outputs.cosmosDBId
-output cosmosDBName string = cosmosDB.outputs.cosmosDBName
-output cosmosDBDocumentEndpoint string = cosmosDB.outputs.cosmosDBDocumentEndpoint
-output aiFoundryId string = aiFoundry.outputs.aiFoundryId
-output aiFoundryName string = aiFoundry.outputs.aiFoundryName
-output aiFoundryEndpoint string = aiFoundry.outputs.aiFoundryEndpoint
-output aiFoundryProjectId string = aiFoundry.outputs.aiFoundryProjectId
-output aiFoundryProjectName string = aiFoundry.outputs.aiFoundryProjectName
+// User-assigned managed identity
+module managedIdentity 'modules/managed-identity.bicep' = {
+  name: 'managedIdentity'
+  scope: rg
+  params: {
+    name: 'az-id-${resourceToken}'
+    location: location
+    tags: tags
+  }
+}
+
+// Key Vault access for managed identity
+module keyVaultAccess 'modules/keyvault-access.bicep' = {
+  name: 'keyVaultAccess'
+  scope: rg
+  params: {
+    keyVaultName: keyVault.outputs.keyVaultName
+    principalId: managedIdentity.outputs.managedIdentityPrincipalId
+  }
+}
+
+// Container Apps Environment
+module containerAppsEnvironment 'modules/container-apps-environment.bicep' = {
+  name: 'containerAppsEnvironment'
+  scope: rg
+  params: {
+    name: 'az-cae-${resourceToken}'
+    location: location
+    tags: tags
+    logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsId
+  }
+}
+
+// Container App for stu-copilot-web
+module webContainerApp 'modules/container-app-web.bicep' = {
+  name: 'webContainerApp'
+  scope: rg
+  params: {
+    name: 'az-ca-${resourceToken}'
+    location: location
+    tags: tags
+    containerAppsEnvironmentId: containerAppsEnvironment.outputs.containerAppsEnvironmentId
+    containerRegistryLoginServer: containerRegistry.outputs.containerRegistryLoginServer
+    managedIdentityId: managedIdentity.outputs.managedIdentityId
+    environment: environment
+    cosmosDbEndpoint: cosmosDB.outputs.cosmosDBDocumentEndpoint
+    cosmosDbPrimaryKey: cosmosDB.outputs.cosmosDBPrimaryKey
+    aiFoundryEndpoint: aiFoundry.outputs.aiFoundryEndpoint
+    aiFoundryApiKey: aiFoundry.outputs.aiFoundryApiKey
+    applicationInsightsConnectionString: applicationInsights.outputs.applicationInsightsConnectionString
+  }
+  dependsOn: [
+    roleAssignments
+  ]
+}
+
+// Function App for stu-copilot-crawlers
+module functionApp 'modules/function-app.bicep' = {
+  name: 'functionApp'
+  scope: rg
+  params: {
+    name: 'az-func-${resourceToken}'
+    location: location
+    tags: tags
+    managedIdentityId: managedIdentity.outputs.managedIdentityId
+    storageAccountName: storageAccount.outputs.storageAccountName
+    storageAccountKey: storageAccount.outputs.storageAccountKey
+    functionsExtensionVersion: functionsExtensionVersion
+    functionsWorkerRuntime: functionsWorkerRuntime
+    applicationInsightsConnectionString: applicationInsights.outputs.applicationInsightsConnectionString
+    cosmosDbEndpoint: cosmosDB.outputs.cosmosDBDocumentEndpoint
+    cosmosDbPrimaryKey: cosmosDB.outputs.cosmosDBPrimaryKey
+    aiFoundryEndpoint: aiFoundry.outputs.aiFoundryEndpoint
+    aiFoundryApiKey: aiFoundry.outputs.aiFoundryApiKey
+    logAnalyticsWorkspaceId: logAnalytics.outputs.logAnalyticsId
+  }
+  dependsOn: [
+    roleAssignments
+  ]
+}
+
+// Role assignments for managed identity
+module roleAssignments 'modules/role-assignments.bicep' = {
+  name: 'roleAssignments'
+  scope: rg
+  params: {
+    managedIdentityPrincipalId: managedIdentity.outputs.managedIdentityPrincipalId
+    storageAccountName: storageAccount.outputs.storageAccountName
+    containerRegistryName: containerRegistry.outputs.containerRegistryName
+  }
+}
+
+// Outputs
+output RESOURCE_GROUP_ID string = rg.id
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerRegistry.outputs.containerRegistryLoginServer
+output AZURE_LOCATION string = location
+output AZURE_TENANT_ID string = tenant().tenantId
+output AZURE_SUBSCRIPTION_ID string = subscription().subscriptionId
+output AZURE_KEY_VAULT_ENDPOINT string = keyVault.outputs.keyVaultUri
+output AZURE_KEY_VAULT_NAME string = keyVault.outputs.keyVaultName
+output WEB_BASE_URL string = 'https://${webContainerApp.outputs.containerAppFqdn}'
+output FUNCTION_APP_NAME string = functionApp.outputs.functionAppName
+output COSMOS_DB_ENDPOINT string = cosmosDB.outputs.cosmosDBDocumentEndpoint
+output AI_FOUNDRY_ENDPOINT string = aiFoundry.outputs.aiFoundryEndpoint

@@ -43,29 +43,30 @@ logger = logging.getLogger(__name__)
 agents: dict[str, ChatCompletionAgent] = agent_factory.get_agents()
 
 
-@cl.oauth_callback
-async def oauth_callback(
-    provider_id: str,
-    token: str,
-    raw_user_data: Dict[str, str],
-    default_user: cl.User,
-) -> Optional[cl.User]:
-    print(f"OAuth callback for provider {provider_id}")
-    default_user.identifier = raw_user_data["mail"]
-    default_user.display_name = raw_user_data["displayName"]
-    default_user.metadata["user_id"] = raw_user_data["id"]
-    default_user.metadata["first_name"] = raw_user_data["givenName"]
-    default_user.metadata["job_title"] = raw_user_data["jobTitle"]
-    default_user.metadata["office_location"] = raw_user_data["officeLocation"]
+# OAuth callback - temporarily disabled until OAuth environment variables are configured
+# @cl.oauth_callback
+# async def oauth_callback(
+#     provider_id: str,
+#     token: str,
+#     raw_user_data: Dict[str, str],
+#     default_user: cl.User,
+# ) -> Optional[cl.User]:
+#     print(f"OAuth callback for provider {provider_id}")
+#     default_user.identifier = raw_user_data["mail"]
+#     default_user.display_name = raw_user_data["displayName"]
+#     default_user.metadata["user_id"] = raw_user_data["id"]
+#     default_user.metadata["first_name"] = raw_user_data["givenName"]
+#     default_user.metadata["job_title"] = raw_user_data["jobTitle"]
+#     default_user.metadata["office_location"] = raw_user_data["officeLocation"]
 
-    # Track user authentication
-    app_insights_service.track_event("user_authentication", {
-        "provider": provider_id,
-        "user_id": default_user.identifier,
-        "display_name": default_user.display_name
-    })
+#     # Store user conversation history in database
+#     user_db = await user_db_service.get_user_by_azure_id(raw_user_data["id"])
+#     if not user_db:
+#         user_db = await user_db_service.create_user(raw_user_data["id"], raw_user_data["displayName"], raw_user_data["mail"])
+#     else:
+#         cl.user_session.set("user_id", user_db.id)
 
-    return default_user
+#     return default_user
 
 
 @cl.on_chat_start
