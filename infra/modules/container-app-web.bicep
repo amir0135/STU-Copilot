@@ -12,6 +12,10 @@ param aiFoundryEndpoint string
 @secure()
 param aiFoundryApiKey string
 param applicationInsightsConnectionString string
+@secure()
+param azureClientId string = ''
+@secure()
+param azureClientSecret string = ''
 
 resource webContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: name
@@ -92,6 +96,14 @@ resource webContainerApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'COSMOSDB_DATABASE'
               value: 'stu-copilot'
+            }
+            {
+              name: 'AZURE_CLIENT_ID'
+              value: azureClientId
+            }
+            {
+              name: 'AZURE_CLIENT_SECRET'
+              value: azureClientSecret
             }
           ]
         }

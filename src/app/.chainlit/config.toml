@@ -2,6 +2,21 @@
 # Whether to enable telemetry (default: true). No personal data is collected.
 enable_telemetry = true
 
+# OAuth providers configuration for Azure AD (commented out for now)
+# oauth_providers = [
+#     {
+#         id = "azure-ad",
+#         env = [
+#             "AZURE_CLIENT_ID",
+#             "AZURE_CLIENT_SECRET"
+#         ],
+#         authorization_url = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+#         token_url = "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+#         userinfo_url = "https://graph.microsoft.com/v1.0/me",
+#         scope = "openid profile email User.Read"
+#     }
+# ]
+
 
 # List of environment variables to be provided by each user to use the app.
 user_env = []

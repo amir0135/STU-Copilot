@@ -22,6 +22,14 @@ param environment string = 'production'
 param functionsExtensionVersion string = '~4'
 param functionsWorkerRuntime string = 'python'
 
+@secure()
+@description('Azure AD OAuth Client ID for authentication')
+param azureClientId string = ''
+
+@secure()
+@description('Azure AD OAuth Client Secret for authentication')
+param azureClientSecret string = ''
+
 // Resource token for unique naming
 var resourceToken = toLower(uniqueString(subscription().id, location, environmentName))
 
@@ -165,6 +173,8 @@ module webContainerApp 'modules/container-app-web.bicep' = {
     aiFoundryEndpoint: aiFoundry.outputs.aiFoundryEndpoint
     aiFoundryApiKey: aiFoundry.outputs.aiFoundryApiKey
     applicationInsightsConnectionString: applicationInsights.outputs.applicationInsightsConnectionString
+    azureClientId: azureClientId
+    azureClientSecret: azureClientSecret
   }
   dependsOn: [
     roleAssignments
